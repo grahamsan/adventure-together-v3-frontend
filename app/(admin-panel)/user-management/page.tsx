@@ -1,0 +1,74 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { fetchUsers } from "@/features/admin/user-management/api";
+import { User } from "@/features/admin/user-management/types";
+import { usersColumns } from "@/components/admin-panel/user-management/column";
+import { UsersDataTable } from "@/components/admin-panel/user-management/data-table";
+import { AlertCircle } from "lucide-react";
+
+export default function UsersPage() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    async function loadUsers() {
+      const data = await fetchUsers();
+      setUsers(data);
+      setLoading(false);
+    }
+    loadUsers();
+  }, []);
+
+  // Message d'alerte pour mobile
+  if (isMobile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center space-y-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-100">
+            <AlertCircle className="w-8 h-8 text-orange-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Écran trop petit
+          </h2>
+          <p className="text-gray-600">
+            La gestion des utilisateurs nécessite un écran plus large pour une meilleure expérience.
+          </p>
+          <p className="text-sm text-gray-500">
+            Veuillez utiliser un ordinateur ou une tablette en mode paysage.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Gestion des utilisateurs
+          </h1>
+        </div>
+
+        <UsersDataTable columns={usersColumns} data={users} />
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,50 @@
+export const mockedTrips = [
+  {
+    from: "Cotonou",
+    to: "Nattitingou",
+    date: "2025-11-16",
+    time: "10:00",
+    description: "Description",
+    seatsConfirmed: 4,
+    seatsAvailable: 4,
+    excales: 1,
+    ownerFullName: "John Doe",
+    ownerAvatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+    createdAt: "2025-11-16",
+    associatedEventName: "Safari dans le parc national",
+    status: "complet",
+    price: 10000
+  },
+  {
+    from: "Parakou",
+    to: "Cotonou",
+    date: "2025-11-16",
+    time: "10:00",
+    description: "Description",
+    seatsConfirmed: 2,
+    seatsAvailable: 4,
+    excales: 1,
+    ownerFullName: "John Doe",
+    ownerAvatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+    createdAt: "2025-11-16",
+    associatedEventName: "Défilé du 1er Août",
+    status: "ouvert",
+    price: 7500
+  },
+  {
+    from: "Cotonou",
+    to: "Ouidah",
+    date: "2025-11-16",
+    time: "10:00",
+    description: "Description",
+    seatsConfirmed: 2,
+    seatsAvailable: 2,
+    excales: 1,
+    ownerFullName: "John Doe",
+    ownerAvatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
+    createdAt: "2025-11-16",
+    associatedEventName: "Fête du vodoun",
+    status: "terminé",
+    price: 5000
+  }
+] as const;
