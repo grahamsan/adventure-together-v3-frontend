@@ -27,7 +27,7 @@ const navItems = [
     icon: Users,
   },
   {
-    name: "Rapports",
+    name: "Signalements",
     path: "/reports",
     icon: AlertCircle,
   },
@@ -80,9 +80,7 @@ export default function AdminSidebar() {
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="p-4 border-b border-gray-200 flex items-center justify-center">
-            <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
-              <span className="text-white font-bold text-xl">A</span>
-            </div>
+            <img src="/at-reduced.png" alt="logo"/>
           </div>
 
           {/* Navigation */}
@@ -99,7 +97,7 @@ export default function AdminSidebar() {
                   className={cn(
                     "flex flex-col items-center justify-center gap-1 px-2 py-3 rounded-lg transition-all duration-200",
                     isActive
-                      ? "bg-blue-500 text-white"
+                      ? "bg-[var(--BRAND-500)] text-white"
                       : "text-gray-600 hover:bg-gray-100"
                   )}
                 >

@@ -104,18 +104,18 @@ export default function AddNewSection({ userFullName }: AddNewSectionProps) {
                 ease: [0.16, 1, 0.3, 1]
               }
             }}
-            className="flex items-center gap-3 w-full justify-center"
+            className="flex items-center gap-3 justify-center bg-white rounded-full p-1 w-fit"
           >
             <Button 
               variant="outline" 
-              className="bg-[var(--BRAND-500)] text-white hover:bg-[var(--BRAND-500)]/20 hover:text-white backdrop-blur-sm transition-all"
+              className="bg-[var(--BRAND-500)] text-white hover:bg-amber-700 hover:text-white backdrop-blur-sm transition-all"
             >
               <Filter className="w-4 h-4 mr-2" />
               Filtrer
             </Button>
             <Button 
               variant="default"
-              className="bg-white text-[var(--BRAND-500)] border border-[var(--BRAND-500)] hover:bg-[var(--BRAND-500)]/20 font-semibold transition-all shadow-sm"
+              className="bg-white text-[var(--BRAND-500)] border border-[var(--BRAND-500)] hover:bg-amber-700 hover:text-white font-semibold transition-all shadow-sm"
             >
               <Plus className="w-4 h-4 mr-2" />
               Nouveau

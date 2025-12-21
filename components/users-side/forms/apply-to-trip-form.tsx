@@ -49,7 +49,7 @@ export default function ApplyToTripForm() {
       }}
     >
       <DialogTrigger asChild>
-        <Button className="flex-1 bg-blue-500 hover:bg-blue-600 text-white rounded-full h-[42px] font-medium">
+        <Button className="flex-1 bg-[var(--BRAND-500)] hover:bg-amber-700 text-white rounded-full h-[42px] font-medium">
           Postuler
         </Button>
       </DialogTrigger>

@@ -1,11 +1,12 @@
-import React, { useState, useMemo, Dispatch, SetStateAction } from 'react';
-import { Search, MapPin, Calendar, Users } from 'lucide-react';
+import React, { useState, useMemo } from "react";
+import { Search, MapPin, Calendar, Users } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@/components/ui/accordion';
+} from "@/components/ui/accordion";
+import Chat from "./chat-component";
 
 // Types
 type Chat = {
@@ -36,6 +37,7 @@ type HighlightedTextProps = {
 type ChatCardProps = {
   chat: Chat;
   searchQuery: string;
+  onClick: () => void;
 };
 
 type CustomAccordionTriggerProps = {
@@ -48,52 +50,52 @@ type CustomAccordionTriggerProps = {
 const mockChats: Chat[] = [
   {
     id: 1,
-    tripId: 'trip1',
-    tripName: 'Paris → Lyon',
+    tripId: "trip1",
+    tripName: "Coronou → Port-Novo",
     tripDate: new Date(2025, 11, 8),
     participants: 3,
-    userName: 'Marie Dubois',
+    userName: "Marie Dubois",
     lastMessage: "Je serai à la gare à 14h précises. N'oublie pas...",
-    timestamp: '10:30',
+    timestamp: "10:30",
     unread: 2,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Marie'
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marie",
   },
   {
     id: 2,
-    tripId: 'trip1',
-    tripName: 'Paris → Lyon',
+    tripId: "trip1",
+    tripName: "Cotonou → Ouidah",
     tripDate: new Date(2025, 11, 8),
     participants: 3,
-    userName: 'Jean Martin',
-    lastMessage: 'Parfait! Je prends mon sac de voyage cl...',
-    timestamp: '09:15',
+    userName: "Jean Martin",
+    lastMessage: "Parfait! Je prends mon sac de voyage cl...",
+    timestamp: "09:15",
     unread: 0,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jean'
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jean",
   },
   {
     id: 3,
-    tripId: 'trip2',
-    tripName: 'Marseille → Nice',
+    tripId: "trip2",
+    tripName: "Parakou → Nikki",
     tripDate: new Date(2025, 11, 9),
     participants: 2,
-    userName: 'Sophie Laurent',
-    lastMessage: 'On peut faire une pause café à mi-chemin...',
-    timestamp: 'Hier',
+    userName: "Sophie Laurent",
+    lastMessage: "On peut faire une pause café à mi-chemin...",
+    timestamp: "Hier",
     unread: 1,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie'
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie",
   },
   {
     id: 4,
-    tripId: 'trip3',
-    tripName: 'Bordeaux → Toulouse',
+    tripId: "trip3",
+    tripName: "Bordeaux → Toulouse",
     tripDate: new Date(2025, 11, 23),
     participants: 4,
-    userName: 'Emma Rousseau',
-    lastMessage: 'Le départ est toujours prévu pour 8h ...',
-    timestamp: '2 jours',
+    userName: "Emma Rousseau",
+    lastMessage: "Le départ est toujours prévu pour 8h ...",
+    timestamp: "2 jours",
     unread: 0,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma'
-  }
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emma",
+  },
 ];
 
 // Fonctions utilitaires
@@ -103,21 +105,23 @@ const formatRelativeDate = (date: Date): string => {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) return "Aujourd'hui";
-  if (diffDays === 1) return 'Demain';
-  if (diffDays === 2) return 'Après-demain';
+  if (diffDays === 1) return "Demain";
+  if (diffDays === 2) return "Après-demain";
   if (diffDays >= 3 && diffDays <= 7) return `Dans ${diffDays} jours`;
-  if (diffDays > 7 && diffDays <= 14) return 'Dans une semaine';
-  if (diffDays > 14 && diffDays <= 21) return 'Dans deux semaines';
-  if (diffDays > 21 && diffDays <= 30) return 'Dans trois semaines';
+  if (diffDays > 7 && diffDays <= 14) return "Dans une semaine";
+  if (diffDays > 14 && diffDays <= 21) return "Dans deux semaines";
+  if (diffDays > 21 && diffDays <= 30) return "Dans trois semaines";
 
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 };
 
-// Composants
 const HighlightedText: React.FC<HighlightedTextProps> = ({ text, search }) => {
   if (!search.trim()) return <span>{text}</span>;
 
-  const regex = new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const regex = new RegExp(
+    `(${search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+    "gi"
+  );
   const parts = text.split(regex);
 
   return (
@@ -135,9 +139,12 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({ text, search }) => {
   );
 };
 
-const ChatCard: React.FC<ChatCardProps> = ({ chat, searchQuery }) => {
+const ChatCard: React.FC<ChatCardProps> = ({ chat, searchQuery, onClick }) => {
   return (
-    <div className="flex items-start gap-3 p-4 hover:bg-gray-50 cursor-pointer transition-colors">
+    <div
+      onClick={onClick}
+      className="flex items-start gap-3 p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+    >
       <div className="relative flex-shrink-0">
         <img
           src={chat.avatar}
@@ -163,7 +170,7 @@ const ChatCard: React.FC<ChatCardProps> = ({ chat, searchQuery }) => {
 
         <p
           className={`text-sm truncate ${
-            chat.unread > 0 ? 'text-gray-900 font-normal' : 'text-gray-500'
+            chat.unread > 0 ? "text-gray-900 font-normal" : "text-gray-500"
           }`}
         >
           <HighlightedText text={chat.lastMessage} search={searchQuery} />
@@ -188,7 +195,7 @@ const CustomAccordionTrigger: React.FC<CustomAccordionTriggerProps> = ({
       </div>
       <div className="flex items-center gap-3 ml-3">
         <span className="text-xs text-gray-600 font-normal whitespace-nowrap">
-          {tripCount} chat{tripCount > 1 ? 's' : ''}
+          {tripCount} chat{tripCount > 1 ? "s" : ""}
         </span>
       </div>
     </div>
@@ -197,8 +204,12 @@ const CustomAccordionTrigger: React.FC<CustomAccordionTriggerProps> = ({
 
 // Composant principal
 export default function ChatList() {
-  const [searchQuery, setSearchQuery]: [string, Dispatch<SetStateAction<string>>] = useState('');
-  const [openItems, setOpenItems]: [string[], Dispatch<SetStateAction<string[]>>] = useState([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [openItems, setOpenItems] = useState<string[]>([]);
+  const [selectedChat, setSelectedChat] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const chatsByTrip: [string, Trip][] = useMemo(() => {
     const grouped: Record<string, Trip> = {};
@@ -238,7 +249,20 @@ export default function ChatList() {
       .filter(Boolean) as [string, Trip][];
   }, [chatsByTrip, searchQuery]);
 
-  const totalUnread: number = mockChats.reduce((sum, chat) => sum + chat.unread, 0);
+  const totalUnread: number = mockChats.reduce(
+    (sum, chat) => sum + chat.unread,
+    0
+  );
+
+  if (selectedChat) {
+    return (
+      <Chat
+        chatId={selectedChat.id}
+        chatName={selectedChat.name}
+        onBack={() => setSelectedChat(null)}
+      />
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col bg-white max-w-md mx-auto">
@@ -256,7 +280,7 @@ export default function ChatList() {
           <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
           {totalUnread > 0 && (
             <span className="bg-[var(--BRAND-500)] text-white text-xs font-medium px-2.5 py-1 rounded-full">
-              {totalUnread} nouveau{totalUnread > 1 ? 'x' : ''}
+              {totalUnread} nouveau{totalUnread > 1 ? "x" : ""}
             </span>
           )}
         </div>
@@ -278,7 +302,9 @@ export default function ChatList() {
           <div className="flex flex-col items-center justify-center h-full text-gray-500 p-8">
             <Search className="w-16 h-16 mb-4 text-gray-300" />
             <p className="text-lg font-medium">Aucun résultat</p>
-            <p className="text-sm text-center mt-2">Essayez avec d'autres mots-clés</p>
+            <p className="text-sm text-center mt-2">
+              Essayez avec d'autres mots-clés
+            </p>
           </div>
         ) : (
           <Accordion
@@ -291,12 +317,22 @@ export default function ChatList() {
             {filteredTrips.map(([tripId, trip]) => {
               const isOpen = openItems.includes(tripId);
               return (
-                <AccordionItem key={tripId} value={tripId} className="border-b border-gray-100">
+                <AccordionItem
+                  key={tripId}
+                  value={tripId}
+                  className="border-b border-gray-100"
+                >
                   <AccordionTrigger className="p-0 hover:no-underline [&[data-state=open]]:bg-transparent">
-                    <CustomAccordionTrigger isOpen={isOpen} tripCount={trip.chats.length}>
+                    <CustomAccordionTrigger
+                      isOpen={isOpen}
+                      tripCount={trip.chats.length}
+                    >
                       <div className="flex-1 text-left">
                         <h2 className="font-semibold text-gray-900 text-[15px] mb-1">
-                          <HighlightedText text={trip.tripName} search={searchQuery} />
+                          <HighlightedText
+                            text={trip.tripName}
+                            search={searchQuery}
+                          />
                         </h2>
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <span className="flex items-center gap-1">
@@ -305,16 +341,27 @@ export default function ChatList() {
                           </span>
                           <span className="flex items-center gap-1">
                             <Users className="w-3.5 h-3.5" />
-                            {trip.participants} part{trip.participants > 1 ? 's' : ''}.
+                            {trip.participants} part
+                            {trip.participants > 1 ? "s" : ""}.
                           </span>
                         </div>
                       </div>
                     </CustomAccordionTrigger>
                   </AccordionTrigger>
                   <AccordionContent className="pb-0 pt-0">
-                    <div className="bg-gray-50">
+                    <div className="bg-[#fcf1e8] rounded-[12px] mx-[5%]">
                       {trip.chats.map((chat) => (
-                        <ChatCard key={chat.id} chat={chat} searchQuery={searchQuery} />
+                        <ChatCard
+                          key={chat.id}
+                          chat={chat}
+                          searchQuery={searchQuery}
+                          onClick={() =>
+                            setSelectedChat({
+                              id: chat.tripId,
+                              name: chat.tripName,
+                            })
+                          }
+                        />
                       ))}
                     </div>
                   </AccordionContent>

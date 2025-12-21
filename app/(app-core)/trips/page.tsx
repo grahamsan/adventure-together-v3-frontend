@@ -1,9 +1,10 @@
-import TripsPage from "@/components/users-side/trips-page";
+"use client";
+import TripPage from "@/components/users-side/trip-page";
 
 export default function Trips() {
   return (
     <div>
-      <TripsPage />
+      <TripPage />
     </div>
   );
 }

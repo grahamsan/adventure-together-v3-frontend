@@ -7,7 +7,7 @@ export async function fetchTrips(): Promise<Trip[]> {
       resolve([
         {
           id: "trip1",
-          title: "Paris → Lyon",
+          title: "Cotonou → Parakou",
           date: "12 Mars 2025",
           chats: [
             {
@@ -34,7 +34,7 @@ export async function fetchTrips(): Promise<Trip[]> {
         },
         {
           id: "trip2",
-          title: "Nice → Marseille",
+          title: "Cotonou → Ouidah",
           date: "27 Avril 2025",
           chats: [
             {
