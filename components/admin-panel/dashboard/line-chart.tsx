@@ -65,7 +65,7 @@ export function LineChart({ title, subtitle, data }: LineChartProps) {
           {/* Ligne */}
           <path
             d={linePath}
-            stroke="#3B82F6"
+            stroke="#9ff5e5"
             strokeWidth="3"
             fill="none"
             strokeLinecap="round"
@@ -80,7 +80,7 @@ export function LineChart({ title, subtitle, data }: LineChartProps) {
               cy={point.y}
               r="5"
               fill="white"
-              stroke="#3B82F6"
+              stroke="#5fe8cf"
               strokeWidth="3"
               className="hover:r-7 transition-all cursor-pointer"
             />

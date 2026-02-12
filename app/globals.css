@@ -41,10 +41,20 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --color-brand-500: var(--BRAND-500);
+  --color-brand-900:var(--BRAND-900);
+  --color-brand-800: var(--BRAND-800);
+  --color-brand-600: var(--BRAND-600);
+  --color-brand-500: var(--BRAND-500);  
+  --color-brand-400: var(--BRAND-400);
   --color-brand-300: var(--BRAND-300);
-  --color-secondary-500: var(--SECONDARY-500);
-  --color-tertiary-500: var(--TERTIARY-500);
+  --color-brand-200: var(--BRAND-200);
+  --color-brand-100: var(--BRAND-100);
+  --color-brand-50: var(--BRAND-50);
+  --color-second-500: var(--SECOND-500);
+  --color-second-300: var(--SECOND-300);
+  --color-second-100: var(--SECOND-100);
+  --color-second-50: var(--SECOND-50);
+  --color-ters-500: var(--TERS-500);
 }
 
 :root {
@@ -81,10 +91,20 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   --font-sans: var(--font-plus-jakarta-sans);
+  --BRAND-900:#3b0d04;
+  --BRAND-800:#701a08;
+  --BRAND-600:#ba2a0b;
   --BRAND-500: #f76c4e;
+  --BRAND-400: #fa8b73;
   --BRAND-300: #f0b58b;
-  --SECONDARY-500: #088f76;
-  --TERTIARY-500: #343a40;
+  --BRAND-200:#f7cfc6;
+  --BRAND-100:#f7d9d2;
+  --BRAND-50:#faeeeb;
+  --SECOND-500: #088f76;
+  --SECOND-300: #5fe8cf;
+  --SECOND-100: #9ff5e5;
+  --SECOND-50:#e4f2f0;
+  --TERS-500: #343a40;
 }
 
 .dark {
@@ -235,4 +255,12 @@
 }
 .animate-twinkle {
   animation: twinkle 2s ease-in-out infinite;
+}
+.scrollbar-custom {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #e5e7eb #f9fafb; /* thumb and track colors */
+}
+.scrollbar-none {
+  -ms-overflow-style: none; /* IE et Edge */
+  scrollbar-width: none; /* Firefox */
 }

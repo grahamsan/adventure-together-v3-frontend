@@ -21,7 +21,7 @@ export default function AdminPanelLayout({
   return (
     <div className={`${plusJakartaSans.className} antialiased`}>
       <AdminSidebar />
-      <main className="lg:ml-24 transition-all duration-300">{children}</main>
+      <main className="lg:ml-24 transition-all duration-300 bg-second-50">{children}</main>
     </div>
   );
 }

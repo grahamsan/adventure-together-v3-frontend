@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Report } from "@/features/admin/reports/types";
 import { banUser, deleteExperience, deleteTrip, ignoreReport } from "@/features/admin/reports/api";
 import { Badge } from "@/components/ui/badge";
+import { Ban, EyeClosed, Trash } from "lucide-react";
 
 export const columns: ColumnDef<Report>[] = [
   {
@@ -128,32 +129,36 @@ export const columns: ColumnDef<Report>[] = [
             <button
               onClick={handleBanUser}
               className="text-red-600 hover:text-red-700 font-medium transition-colors"
+              title="bannir"
             >
-              Bannir l'utilisateur
+              <Ban className='w-5 h-5 text-brand-800'/>
             </button>
           )}
           {entityType === 'experience' && (
             <button
               onClick={handleDeleteEntity}
               className="text-red-600 hover:text-red-700 font-medium transition-colors"
+              title="Supprimer l'expérience"
             >
-              Supprimer l'expérience
+              <Trash className='w-5 h-5 text-red-500'/>
             </button>
           )}
           {entityType === 'trip' && (
             <button
               onClick={handleDeleteEntity}
               className="text-red-600 hover:text-red-700 font-medium transition-colors"
+              title="supprimer le trajet"
             >
-              Supprimer le trajet
+              <Trash className='w-5 h-5 text-red-500'/>
             </button>
           )}
           <span className="text-gray-300">|</span>
           <button
             onClick={handleIgnore}
             className="text-gray-600 hover:text-gray-700 font-medium transition-colors"
+            title="ignorer"
           >
-            Ignorer
+              <EyeClosed className='w-5 h-5 text-green-600'/>
           </button>
         </div>
       );

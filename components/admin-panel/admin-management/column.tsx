@@ -5,7 +5,7 @@ import { Admin } from "@/features/admin/admin-management/types";
 import { deleteAdmin } from "@/features/admin/admin-management/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash, Trash2 } from "lucide-react";
 
 import {
   Tooltip,
@@ -127,10 +127,10 @@ export const adminsColumns: ColumnDef<Admin>[] = [
                   onClick={handleDelete}
                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent className="bg-brand-800">
                 <p>Supprimer l'administrateur</p>
               </TooltipContent>
             </Tooltip>

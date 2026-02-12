@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Paperclip, Send } from 'lucide-react';
+import { Paperclip, Send, SendHorizonal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 type ChatInputProps = {
@@ -53,7 +53,7 @@ export default function ChatInput({ onSend }: ChatInputProps) {
         />
 
         <Button onClick={handleSend} size="icon">
-          <Send className="w-4 h-4" />
+          <SendHorizonal className="w-4 h-4" />
         </Button>
       </div>
     </div>

@@ -27,8 +27,14 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import { CalendarIcon, Upload, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useExperiencesControllerCreate } from "@/api/experiences/hooks";
+import { useUploadControllerUploadMultiple } from "@/api/upload/hooks";
+import toast from "react-hot-toast";
+import { formatTimestamp } from "@/utils/format-timestamp";
+import { formatRelativeDate } from "@/utils/format-relative-date";
 
 const eventSchema = z.object({
   title: z.string().min(2, "Le titre doit contenir au moins 2 caractères"),
@@ -40,10 +46,21 @@ const eventSchema = z.object({
   dateStart: z.date(),
   dateEnd: z.date(),
 });
+export interface CreateEventFormProps {
+  open?: boolean;
+  onClose?: () => void;
+}
 
-export default function CreateEventForm() {
+export default function CreateEventForm({
+  open,
+  onClose,
+}: CreateEventFormProps) {
   const [page, setPage] = useState(1);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false); // To control dialog open state
+
+  const createExperienceMutation = useExperiencesControllerCreate();
+  const uploadMutation = useUploadControllerUploadMultiple();
 
   const form = useForm<z.infer<typeof eventSchema>>({
     resolver: zodResolver(eventSchema),
@@ -57,7 +74,48 @@ export default function CreateEventForm() {
   });
 
   const onSubmit = async (values: z.infer<typeof eventSchema>) => {
-    console.log("Ready for API call:", values);
+    try {
+      let imageUrl = "";
+
+      // 1. Upload Image if exists
+      if (values.image) {
+        const formData = new FormData();
+        formData.append("files", values.image);
+
+        // Cast to any to bypass the incorrect generated type definition for upload payload
+        const uploadResponse = await uploadMutation.mutateAsync(
+          formData as any
+        );
+
+        if (uploadResponse?.data && uploadResponse.data.length > 0) {
+          imageUrl = uploadResponse.data[0].url;
+        }
+      }
+
+      // 2. Create Experience
+      const experiencePayload = {
+        title: values.title,
+        description: values.description,
+        location: values.location,
+        dateStart: values.dateStart.toISOString(),
+        dateEnd: values.dateEnd.toISOString(),
+        image: imageUrl,
+        type: "event", // Defaulting to 'event' as per current specific usage, or could be dynamic
+      } as const; // using as const to help with specific string literal types if needed
+
+      await createExperienceMutation.mutateAsync(experiencePayload);
+
+      toast.success("Événement créé avec succès !");
+      setIsOpen(false);
+      form.reset();
+      setPage(1);
+      setImagePreview(null);
+    } catch (error: any) {
+      console.error("Error creating event:", error);
+      toast.error(
+        "Une erreur est survenue lors de la création de l'événement."
+      );
+    }
   };
 
   const handleImage = (file: File | null) => {
@@ -74,13 +132,20 @@ export default function CreateEventForm() {
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        {/* FIX: Ajout de suppressHydrationWarning pour éviter les erreurs d'IDs Radix UI */}
+    <Dialog
+      open={open !== undefined ? open : isOpen}
+      onOpenChange={(isOpen) => {
+        if (onClose && !isOpen) {
+          onClose();
+        }
+        setIsOpen(isOpen);
+      }}
+    >
+      {/* <DialogTrigger asChild>
         <Button className="w-10 h-10" suppressHydrationWarning={true}>
           <Plus className="w-5 h-5" />
         </Button>
-      </DialogTrigger>
+      </DialogTrigger> */}
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Créer un événement</DialogTitle>
@@ -156,7 +221,7 @@ export default function CreateEventForm() {
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
                                 {field.value
-                                  ? format(field.value, "PPP")
+                                  ? formatRelativeDate(field.value)
                                   : "Choisir une date"}
                               </div>
                             </FormControl>
@@ -166,6 +231,7 @@ export default function CreateEventForm() {
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
+                              disabled={(date) => date < new Date()}
                             />
                           </PopoverContent>
                         </Popover>
@@ -191,7 +257,7 @@ export default function CreateEventForm() {
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
                                 {field.value
-                                  ? format(field.value, "PPP")
+                                  ? formatRelativeDate(field.value)
                                   : "Choisir une date"}
                               </div>
                             </FormControl>
@@ -201,6 +267,7 @@ export default function CreateEventForm() {
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
+                              disabled={(date) => date < new Date()}
                             />
                           </PopoverContent>
                         </Popover>
@@ -275,7 +342,18 @@ export default function CreateEventForm() {
                   >
                     Retour
                   </Button>
-                  <Button type="submit">Créer l'événement</Button>
+                  <Button
+                    type="submit"
+                    disabled={
+                      createExperienceMutation.isPending ||
+                      uploadMutation.isPending
+                    }
+                  >
+                    {createExperienceMutation.isPending ||
+                    uploadMutation.isPending
+                      ? "Création..."
+                      : "Créer l'événement"}
+                  </Button>
                 </div>
               </>
             )}

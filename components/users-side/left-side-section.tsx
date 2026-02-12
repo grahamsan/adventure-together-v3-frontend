@@ -20,7 +20,7 @@ const userHasAccess = (item: NavigationItem, role: string) => {
 
 const navigationItems: NavigationItem[] = [
   {
-    label: "Événements",
+    label: "Expériences",
     icon: <Calendar className="w-5 h-5" />,
     path: "/home",
   },
@@ -62,12 +62,10 @@ export default function LeftSideSection({
   const pathname = usePathname();
 
   return (
-    <div className="sticky top-0 left-0 h-screen w-[20vw] max-w-[25vw] bg-transparent border-r border-gray-200 flex flex-col justify-between">
+    <div className="bg-white sticky top-0 left-0 h-screen w-[20vw] max-w-[25vw] bg-transparent border-r border-gray-200 flex flex-col justify-between">
       {/* Logo */}
-      <div className="px-6 py-5">
-        <h1 className="text-xl font-bold" style={{ color: "var(--BRAND-500)" }}>
-          AdventureTogether
-        </h1>
+      <div className="flex itzms-center w-full justify-center p-2">
+        <img src="/at.png" alt="logo" className="w-52 h-20" />
       </div>
 
       {/* Navigation */}
@@ -81,7 +79,7 @@ export default function LeftSideSection({
               className={`flex items-center gap-3 py-2 px-3 rounded-lg transition
     ${
       pathname === item.path || pathname.startsWith(item.path)
-        ? "bg-[var(--BRAND-500)] text-white"
+        ? "bg-brand-500 text-white"
         : "text-gray-700 hover:bg-gray-100"
     }
   `}
@@ -90,7 +88,7 @@ export default function LeftSideSection({
                 className={
                   pathname === item.path || pathname.startsWith(item.path)
                     ? "text-white"
-                    : "text-[var(--BRAND-500)]"
+                    : "text-brand-600"
                 }
               >
                 {item.icon}

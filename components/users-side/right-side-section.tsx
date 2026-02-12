@@ -5,10 +5,11 @@ import QuickMessagesWidget from "../shared/widgets/quick-messages-widget";
 import QuickNotificationsWidget from "../shared/widgets/quick-notification-widget";
 import IncomingAccordion from "./layouts/incoming-accordion";
 import ChatList from "./layouts/chat/chat-list";
+import NotificationList from "./layouts/notifications/notification-list";
 
 export default function LeftSideBar() {
   return (
-    <div className="sticky top-0 right-0 h-screen w-[30vw] max-w-[30vw] bg-transparent border-l border-gray-200 flex flex-col justify-between">
+    <div className="bg-white sticky top-0 right-0 h-screen w-[30vw] max-w-[30vw] bg-transparent border-l border-gray-200 flex flex-col justify-between">
       <Tabs defaultValue="upcoming" className="w-full min-w-0">
         <div className="px-6 py-5">
           <TabsList className="w-full bg-white/90 backdrop-blur-sm rounded-full p-1 mb-4 shadow-sm border-none">
@@ -46,7 +47,7 @@ export default function LeftSideBar() {
             <ChatList />
           </TabsContent>
           <TabsContent value="notifications" className="mt-0 min-w-0">
-            <QuickNotificationsWidget />
+            <NotificationList/>
           </TabsContent>
         </div>
       </Tabs>

@@ -102,9 +102,11 @@ function SortableEscaleCard({ id, value }: { id: string; value: string }) {
     </div>
   );
 }
-
-// --- Main Form Component ---
-export default function CreateTripForm() {
+export interface CreateTripFormProps {
+  open?: boolean;
+  onClose?: () => void;
+}
+export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
   const [step, setStep] = useState(1);
   const [escales, setEscales] = useState<string[]>([]);
   const [escaleInput, setEscaleInput] = useState("");
@@ -150,10 +152,15 @@ export default function CreateTripForm() {
     // await fetch("/api/trips", { method: "POST", body: JSON.stringify(payload) });
   };
 
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <Dialog
-      onOpenChange={(open) => {
-        if (!open) form.reset();
+      open={open !== undefined ? open : isOpen}
+      onOpenChange={(isOpenNew) => {
+        if (!isOpenNew) form.reset();
+        if (onClose && !isOpenNew) onClose();
+        setIsOpen(isOpenNew);
       }}
     >
       <DialogTrigger asChild>
@@ -178,7 +185,7 @@ export default function CreateTripForm() {
                   name="from"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>From</FormLabel>
+                      <FormLabel>Départ</FormLabel>
                       <Input {...field} placeholder="Lieu de départ" />
                       <FormMessage />
                     </FormItem>
@@ -189,7 +196,7 @@ export default function CreateTripForm() {
                   name="to"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>To</FormLabel>
+                      <FormLabel>Arrivée</FormLabel>
                       <Input {...field} placeholder="Destination" />
                       <FormMessage />
                     </FormItem>
@@ -203,7 +210,6 @@ export default function CreateTripForm() {
               </>
             )}
 
-            {/* --- STEP 2: Details --- */}
             {step === 2 && (
               <>
                 <FormField

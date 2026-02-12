@@ -25,7 +25,7 @@ export function GradualSpacing({
             exit="hidden"
             transition={{ duration: 0.5, delay: i * 0.1 }}
             className={cn(
-              "text-xl text-center sm:text-4xl font-bold tracking-tighter md:text-6xl md:leading-[4rem]",
+              "text-xl text-BRAND-600 text-center sm:text-4xl font-bold tracking-tighter md:text-6xl md:leading-[4rem]",
               className
             )}
           >

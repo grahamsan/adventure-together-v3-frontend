@@ -5,7 +5,7 @@ import { fetchReports } from "@/features/admin/reports/api";
 import { Report } from "@/features/admin/reports/types";
 import { columns } from "@/components/admin-panel/reports/column";
 import { DataTable } from "@/components/admin-panel/reports/data-table";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Loader } from "lucide-react";
 
 export default function ReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -52,14 +52,14 @@ export default function ReportsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
+    <div className="min-h-screen flex items-center justify-center bg-second-50">
+        <Loader className='w-14 h-14 animate-spin text-brand-500'/>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen  py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">

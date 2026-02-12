@@ -18,17 +18,17 @@ export async function fetchStats(period: StatsPeriod = '30days'): Promise<StatsD
         reportsChange: -1.5,
         newUsersVsExperiences: [
           { label: 'Jan', value: 65 },
-          { label: 'Feb', value: 45 },
+          { label: 'Fev', value: 45 },
           { label: 'Mar', value: 70 },
-          { label: 'Apr', value: 85 },
-          { label: 'May', value: 120 },
+          { label: 'Avr', value: 85 },
+          { label: 'Mai', value: 120 },
           { label: 'Jun', value: 115 },
         ],
         tripsCreatedWeekly: [
-          { label: 'Week 1', value: 45 },
-          { label: 'Week 2', value: 52 },
-          { label: 'Week 3', value: 38 },
-          { label: 'Week 4', value: 65 },
+          { label: 'Sem 1', value: 45 },
+          { label: 'Sem 2', value: 52 },
+          { label: 'Sem 3', value: 38 },
+          { label: 'Sem 4', value: 65 },
         ],
       });
     }, 800)

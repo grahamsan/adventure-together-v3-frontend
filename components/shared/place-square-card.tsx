@@ -5,9 +5,9 @@ export interface PlaceCardProps {
   imageUrl: string;
   title: string;
   description: string;
-  duration: string;
   type: "Ville" | "Musée" | "Parc" | "Hotel" | "Monument";
   pickupAvailable: boolean;
+  duration: string;
 }
 
 export default function PlaceCard({

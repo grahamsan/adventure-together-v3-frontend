@@ -1,351 +1,375 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
-
-// ---------------- MOCK COMMENTS ----------------
-
-const MOCK_COMMENTS = Array.from({ length: 25 }, (_, i) => ({
-  id: i + 1,
-  author: {
-    fullName: `Utilisateur ${i + 1}`,
-    avatar: `https://api.dicebear.com/7.x/initials/png?seed=User${i + 1}`,
-  },
-  content: "Super événement ! Hâte d’y participer 😄",
-  likes: Math.floor(Math.random() * 15),
-  dislikes: Math.floor(Math.random() * 5),
-}));
-
-// ---------------- TYPES ----------------
+import { Textarea } from "@/components/ui/textarea";
+import {
+  ThumbsUp,
+  ThumbsDown,
+  Send,
+  Reply,
+  Flag,
+  X,
+  MoreVertical,
+  Trash2,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "react-hot-toast";
+import {
+  useCommentsControllerFindAll,
+  useCommentsControllerCreate,
+  useCommentsControllerLike,
+  useCommentsControllerDislike,
+  useCommentsControllerReport,
+  useCommentsControllerRemove,
+} from "@/api/comments/hooks";
+import type { Comment } from "@/api/comments/types";
 
 interface EventDetailsDrawerProps {
-  ownerFullName: string;
-  ownerAvatarUrl: string;
+  experienceId: string;
   eventTitle: string;
-  eventDescription: string;
-  eventDate: string;
-  eventLocation: string;
-  eventImage: string;
-  eventParticipants: string[];
-  createdAt: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-// ---------------- COMPONENT ----------------
+interface CommentItemProps {
+  comment: Comment;
+  onReply: (commentId: string, authorName: string) => void;
+  onLike: (commentId: string) => void;
+  onDislike: (commentId: string) => void;
+  onReport: (commentId: string) => void;
+  onDelete: (commentId: string) => void;
+  currentUserId?: string;
+  isReply?: boolean;
+}
+
+function CommentItem({
+  comment,
+  onReply,
+  onLike,
+  onDislike,
+  onReport,
+  onDelete,
+  currentUserId,
+  isReply = false,
+}: CommentItemProps) {
+  // Déterminer le nom d'affichage selon le type d'utilisateur
+  const authorName = React.useMemo(() => {
+    if (comment.user.firstName && comment.user.lastName) {
+      return `${comment.user.firstName} ${comment.user.lastName}`;
+    }
+    if (comment.user.name) {
+      return comment.user.name;
+    }
+    if (comment.user.companyName) {
+      return comment.user.companyName;
+    }
+    return "Utilisateur";
+  }, [comment.user]);
+
+  const isOwner = currentUserId === comment.user.id;
+
+  return (
+    <div className={`${isReply ? "ml-12" : ""}`}>
+      <div className="flex gap-3 group">
+        <Avatar className="size-9 flex-shrink-0">
+          <AvatarImage src={comment.user.avatarUrl || undefined} />
+          <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-500 text-white">
+            {authorName.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+
+        <div className="flex-1 min-w-0">
+          <div className="bg-gray-50 rounded-2xl px-4 py-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-col">
+                <p className="font-semibold text-sm text-gray-900">
+                  {authorName}
+                </p>
+                {comment.user.role === "Organizer" && (
+                  <span className="text-xs text-blue-600 font-medium">
+                    Organisateur
+                  </span>
+                )}
+              </div>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {isOwner && (
+                    <DropdownMenuItem
+                      onClick={() => onDelete(comment.id)}
+                      className="text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Supprimer
+                    </DropdownMenuItem>
+                  )}
+                  {!isOwner && (
+                    <DropdownMenuItem onClick={() => onReport(comment.id)}>
+                      <Flag className="h-4 w-4 mr-2" />
+                      Signaler
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            <p className="text-sm text-gray-700 mt-0.5 break-words">
+              {comment.content}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4 mt-1.5 ml-2">
+            <button
+              onClick={() => onLike(comment.id)}
+              className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-blue-600 transition-colors"
+            >
+              <ThumbsUp className="h-3.5 w-3.5" />
+              <span className="font-medium">{comment.likesCount}</span>
+            </button>
+
+            <button
+              onClick={() => onDislike(comment.id)}
+              className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-red-600 transition-colors"
+            >
+              <ThumbsDown className="h-3.5 w-3.5" />
+              <span className="font-medium">{comment.dislikesCount}</span>
+            </button>
+
+            {!isReply && (
+              <button
+                onClick={() => onReply(comment.id, authorName)}
+                className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-blue-600 transition-colors"
+              >
+                <Reply className="h-3.5 w-3.5" />
+                <span className="font-medium">Répondre</span>
+              </button>
+            )}
+
+            <span className="text-xs text-gray-400">
+              {new Date(comment.createdAt).toLocaleDateString("fr-FR", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          </div>
+
+          {comment.replies && comment.replies.length > 0 && (
+            <div className="mt-3 space-y-3">
+              {comment.replies.map((reply) => (
+                <CommentItem
+                  key={reply.id}
+                  comment={reply}
+                  onReply={onReply}
+                  onLike={onLike}
+                  onDislike={onDislike}
+                  onReport={onReport}
+                  onDelete={onDelete}
+                  currentUserId={currentUserId}
+                  isReply={true}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function EventDetailsDrawer({
-  ownerFullName,
-  ownerAvatarUrl,
+  experienceId,
   eventTitle,
-  eventDescription,
-  eventDate,
-  eventLocation,
-  eventImage,
-  eventParticipants,
-  createdAt,
   open,
   onOpenChange,
 }: EventDetailsDrawerProps) {
-  // Participation locale
-  const [isParticipating, setIsParticipating] = React.useState(false);
+  const [newComment, setNewComment] = React.useState("");
+  const [replyTo, setReplyTo] = React.useState<{
+    id: string;
+    authorName: string;
+  } | null>(null);
 
-  // Comments state
-  const [comments, setComments] = React.useState(MOCK_COMMENTS.slice(0, 5));
-  const [hasMore, setHasMore] = React.useState(true);
+  // Queries & Mutations
+  const { data: commentsData, isLoading } =
+    useCommentsControllerFindAll(experienceId);
+  const createComment = useCommentsControllerCreate();
+  const likeComment = useCommentsControllerLike();
+  const dislikeComment = useCommentsControllerDislike();
+  const reportComment = useCommentsControllerReport();
+  const removeComment = useCommentsControllerRemove();
 
-  const commentsRef = React.useRef<HTMLDivElement | null>(null);
+  const comments = commentsData || [];
 
-  // Load more when scrolling
-  const handleScroll = () => {
-    const div = commentsRef.current;
-    if (!div || !hasMore) return;
+  const handleSubmitComment = async () => {
+    if (!newComment.trim()) return;
 
-    const bottomReached =
-      div.scrollHeight - div.scrollTop - div.clientHeight < 80;
+    try {
+      await createComment.mutateAsync({
+        experienceId,
+        content: newComment.trim(),
+        parentId: replyTo?.id,
+      });
 
-    if (bottomReached) {
-      setTimeout(() => {
-        setComments((prev) => {
-          const nextChunk = MOCK_COMMENTS.slice(prev.length, prev.length + 5);
-          if (nextChunk.length < 5) setHasMore(false);
-          return [...prev, ...nextChunk];
-        });
-      }, 300);
+      setNewComment("");
+      setReplyTo(null);
+
+      toast.success("Commentaire publié");
+    } catch (error) {
+      toast.error("Impossible de publier le commentaire.");
     }
   };
 
-  // Like / Dislike interactions
-  const handleReact = (id: number, type: "like" | "dislike") => {
-    setComments((prev) =>
-      prev.map((c) =>
-        c.id === id
-          ? {
-              ...c,
-              likes: c.likes + (type === "like" ? 1 : 0),
-              dislikes: c.dislikes + (type === "dislike" ? 1 : 0),
-            }
-          : c
-      )
-    );
+  const handleLike = async (commentId: string) => {
+    try {
+      await likeComment.mutateAsync({ id: commentId });
+    } catch (error) {
+      toast.error("Impossible de liker le commentaire.");
+    }
+  };
+
+  const handleDislike = async (commentId: string) => {
+    try {
+      await dislikeComment.mutateAsync({ id: commentId });
+    } catch (error) {
+      toast.error("Impossible de disliker le commentaire.");
+    }
+  };
+
+  const handleReport = async (commentId: string) => {
+    try {
+      await reportComment.mutateAsync({ id: commentId });
+      toast.success("Signalement envoyé");
+    } catch (error) {
+      toast.error("Impossible de signaler le commentaire.");
+    }
+  };
+
+  const handleDelete = async (commentId: string) => {
+    try {
+      await removeComment.mutateAsync({ id: commentId });
+      toast.success("Commentaire supprimé");
+    } catch (error) {
+      toast.error("Impossible de supprimer le commentaire.");
+    }
+  };
+
+  const handleReply = (commentId: string, authorName: string) => {
+    setReplyTo({ id: commentId, authorName });
   };
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="p-0 h-[90vh] overflow-hidden">
-        <DrawerHeader className="border-b">
-          <DrawerTitle className="text-xl">{eventTitle}</DrawerTitle>
+      <DrawerContent className="h-[85vh] flex flex-col">
+        <DrawerHeader className="border-b px-6 py-4">
+          <DrawerTitle className="text-lg font-semibold">
+            Commentaires - {eventTitle}
+          </DrawerTitle>
         </DrawerHeader>
 
-        <div className="p-4 space-y-6">
-          <Tabs defaultValue="infos" className="flex justify-center ">
-            <TabsList className="grid grid-cols-2 rounded-full bg-muted">
-              <TabsTrigger value="infos" className="rounded-full">
-                Infos
-              </TabsTrigger>
-              <TabsTrigger value="comments" className="rounded-full">
-                Commentaires
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="infos" className="flex space-x-5 pt-4">
-              <div className="w-[35%] h-[260px] flex gap-2 rounded-[12px] overflow-hidden">
-                {/* Image principale gauche */}
-                <div className="flex-1 relative rounded-[12px] overflow-hidden">
-                  <img
-                    src={eventImage}
-                    alt="Event Image Main"
-                    width={500}
-                    height={500}
-                    className="object-cover"
-                  />
-                </div>
-
-                <div className="w-[35%] flex flex-col gap-2">
-                  <div className="relative flex-1 rounded-[12px] overflow-hidden">
-                    <img
-                      src={eventImage}
-                      alt="Sub 1"
-                      width={500}
-                      height={500}
-                      className="object-cover"
-                    />
-                  </div>
-
-                  <div className="relative flex-1 rounded-[12px] overflow-hidden">
-                    <img
-                      src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"
-                      alt="Sub 2"
-                      width={500}
-                      height={500}
-                      className="object-cover"
-                    />
-                  </div>
-                </div>
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                <p className="text-sm text-gray-500">
+                  Chargement des commentaires...
+                </p>
               </div>
-              <div className="w-[65%] space-y-4">
-                {/* Location and Date */}
-                <div className="flex gap-6">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="[var(--BRAND-500)]"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                    <span className="text-sm font-medium text-gray-700">
-                      {eventLocation}
-                    </span>
-                  </div>
+            </div>
+          ) : comments.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-32 text-center">
+              <p className="text-sm text-gray-500 mb-1">
+                Aucun commentaire pour le moment
+              </p>
+              <p className="text-xs text-gray-400">
+                Soyez le premier à commenter cette expérience !
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {comments.map((comment: Comment) => (
+                <CommentItem
+                  key={comment.id}
+                  comment={comment}
+                  onReply={handleReply}
+                  onLike={handleLike}
+                  onDislike={handleDislike}
+                  onReport={handleReport}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
-                  <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="[var(--BRAND-500)]"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-                      <line x1="16" x2="16" y1="2" y2="6" />
-                      <line x1="8" x2="8" y1="2" y2="6" />
-                      <line x1="3" x2="21" y1="10" y2="10" />
-                    </svg>
-                    <span className="text-sm font-medium text-gray-700">
-                      {eventDate}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Participants count */}
-                <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg w-fit">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="[var(--BRAND-500)]"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
-                  <span className="text-sm font-medium text-gray-700">
-                    {eventParticipants.length} / 8 participants
-                  </span>
-                </div>
-
-                {/* Description */}
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-gray-900">Description</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    {eventDescription}
-                  </p>
-                </div>
-
-                {/* Organisateur */}
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-gray-900">Organisateur</h3>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="size-12">
-                      <AvatarImage src={ownerAvatarUrl} />
-                      <AvatarFallback>U</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {ownerFullName}
-                      </p>
-                      <button className="text-sm text-[[var(--BRAND-500)]] hover:underline">
-                        Voir le profil
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Participants */}
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-gray-900">
-                    Participants ({eventParticipants.length})
-                  </h3>
-                  <div className="flex -space-x-2">
-                    {eventParticipants.map((p, i) => (
-                      <Avatar key={i} className="size-10 border-2 border-white">
-                        <AvatarImage src={p} />
-                        <AvatarFallback>P</AvatarFallback>
-                      </Avatar>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-2">
-                  <Button
-                    className="flex-1 bg-[[var(--BRAND-500)]] hover:bg-[#3d8fd9] text-white rounded-full"
-                    onClick={() => setIsParticipating(!isParticipating)}
-                  >
-                    {isParticipating
-                      ? "Annuler la réservation"
-                      : "Réserver l'expérience"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1 border-[[var(--BRAND-500)]] text-[[var(--BRAND-500)]] hover:bg-blue-50 rounded-full"
-                  >
-                    Voir les trajets associés
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-
-            {/* ----------------- COMMENTS ------------------- */}
-            <TabsContent value="comments" className="pt-4">
-              <div
-                ref={commentsRef}
-                onScroll={handleScroll}
-                className="max-h-64 overflow-y-auto pr-2 space-y-4"
+        <div className="border-t px-6 py-4 bg-white">
+          {replyTo && (
+            <div className="mb-3 flex items-center gap-2 text-sm text-gray-600 bg-blue-50 rounded-lg px-3 py-2">
+              <Reply className="h-4 w-4" />
+              <span>
+                Répondre à{" "}
+                <span className="font-medium">{replyTo.authorName}</span>
+              </span>
+              <button
+                onClick={() => setReplyTo(null)}
+                className="ml-auto hover:bg-blue-100 rounded p-0.5 transition-colors"
               >
-                {comments.map((comment) => (
-                  <div
-                    key={comment.id}
-                    className="p-3 rounded-xl bg-gray-100/60"
-                  >
-                    <div className="flex gap-3 items-start">
-                      <Avatar>
-                        <AvatarImage src={comment.author.avatar} />
-                        <AvatarFallback>U</AvatarFallback>
-                      </Avatar>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
 
-                      <div className="w-full">
-                        <p className="font-medium">{comment.author.fullName}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {comment.content}
-                        </p>
+          <div className="flex gap-3">
+            <Textarea
+              placeholder="Écrire un commentaire..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="min-h-[44px] max-h-32 resize-none rounded-2xl"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmitComment();
+                }
+              }}
+            />
+            <Button
+              onClick={handleSubmitComment}
+              disabled={!newComment.trim() || createComment.isPending}
+              className="h-11 w-11 rounded-full flex-shrink-0 bg-blue-600 hover:bg-blue-700"
+              size="icon"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
 
-                        {/* reactions */}
-                        <div className="flex gap-4 mt-2">
-                          <button
-                            className="flex items-center gap-1 text-sm text-gray-600"
-                            onClick={() => handleReact(comment.id, "like")}
-                          >
-                            <ThumbsUp className="size-4" />
-                            {comment.likes}
-                          </button>
-
-                          <button
-                            className="flex items-center gap-1 text-sm text-gray-600"
-                            onClick={() => handleReact(comment.id, "dislike")}
-                          >
-                            <ThumbsDown className="size-4" />
-                            {comment.dislikes}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                {hasMore && (
-                  <p className="text-center py-2 text-sm text-muted-foreground">
-                    Chargement...
-                  </p>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
+          <p className="text-xs text-gray-400 mt-2 ml-1">
+            Appuyez sur Entrée pour envoyer, Shift + Entrée pour un saut de
+            ligne
+          </p>
         </div>
       </DrawerContent>
     </Drawer>

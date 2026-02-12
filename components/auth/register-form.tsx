@@ -28,9 +28,10 @@ import { Card } from "@/components/ui/card";
 import { MotionWrapper } from "../shared/motion-wrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useRegister } from "@/features/auth/queries";
-import { RegisterDto } from "@/features/auth/types";
+import { useAuthControllerRegister } from "@/api/auth/hooks";
+import { RegisterDto } from "@/api/auth/types";
 import { format } from "date-fns";
+import toast from "react-hot-toast";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
@@ -149,7 +150,7 @@ export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
-  const registerMutation = useRegister();
+  const registerMutation = useAuthControllerRegister();
 
   // Fonction pour obtenir le schéma actuel
   const getCurrentSchema = () => {
@@ -250,52 +251,68 @@ export default function RegisterForm() {
 
     // Construct RegisterDto based on role
     const registerPayload: RegisterDto = {
-      email: finalData.email || "",
+      email: finalData.email || finalData.emailContact || "",
       password: finalData.password || "",
-      role: finalData.role || "Participant",
-      phoneNumber: finalData.telephone || null,
-      firstName: finalData.prenom || null,
-      lastName: finalData.nom || null,
-      dateOfBirth: finalData.dateNaissance || null,
-      driverLicenseNumber: finalData.permisConduire || null,
-      name: finalData.nom || null,
-      companyName: finalData.nomEntreprise || null,
-      companyType: finalData.type || null,
-      contactEmail: finalData.emailContact || null,
-      companyAddress: finalData.adresseSiege || null,
+      role: (finalData.role as RegisterDto["role"]) || "Participant",
+      phoneNumber: finalData.telephone?.trim() || undefined,
+      firstName: finalData.prenom?.trim() || undefined,
+      lastName: finalData.nom?.trim() || undefined,
+      dateOfBirth: finalData.dateNaissance?.trim() || undefined,
+      driverLicenseNumber: finalData.permisConduire?.trim() || undefined,
+      companyName: finalData.nomEntreprise?.trim() || undefined,
+      companyType: finalData.type || undefined,
+      contactEmail: finalData.emailContact?.trim() || undefined,
+      companyAddress: finalData.adresseSiege?.trim() || undefined,
     };
 
-    // Refine payload based on role to ensure NULLs are sent for irrelevant fields
+    // Map organizerType for Organizer role
+    if (finalData.role === "Organizer") {
+      registerPayload.organizerType = isEntreprise ? "Company" : "Individual";
+    }
+
+    // Refine payload based on role to ensure fields are omitted correctly
     if (finalData.role === "Participant") {
-      registerPayload.driverLicenseNumber = null;
-      registerPayload.companyName = null;
-      registerPayload.companyType = null;
-      registerPayload.contactEmail = null;
-      registerPayload.companyAddress = null;
+      registerPayload.driverLicenseNumber = undefined;
+      registerPayload.companyName = undefined;
+      registerPayload.companyType = undefined;
+      registerPayload.contactEmail = undefined;
+      registerPayload.companyAddress = undefined;
+      registerPayload.organizerType = undefined;
     } else if (finalData.role === "Driver") {
-      registerPayload.companyName = null;
-      registerPayload.companyType = null;
-      registerPayload.contactEmail = null;
-      registerPayload.companyAddress = null;
+      registerPayload.companyName = undefined;
+      registerPayload.companyType = undefined;
+      registerPayload.contactEmail = undefined;
+      registerPayload.companyAddress = undefined;
+      registerPayload.organizerType = undefined;
     } else if (finalData.role === "Organizer") {
       if (isEntreprise) {
         // Enterprise Organizer
-        registerPayload.firstName = null;
-        registerPayload.lastName = null;
-        registerPayload.dateOfBirth = null;
-        registerPayload.driverLicenseNumber = null;
-        registerPayload.name = null;
+        registerPayload.firstName = undefined;
+        registerPayload.lastName = undefined;
+        registerPayload.dateOfBirth = undefined;
+        registerPayload.driverLicenseNumber = undefined;
       } else {
         // Individual Organizer
-        registerPayload.companyName = null;
-        registerPayload.companyType = null;
-        registerPayload.contactEmail = null;
-        registerPayload.companyAddress = null;
-        registerPayload.driverLicenseNumber = null;
+        registerPayload.companyName = undefined;
+        registerPayload.companyType = undefined;
+        registerPayload.contactEmail = undefined;
+        registerPayload.companyAddress = undefined;
+        registerPayload.driverLicenseNumber = undefined;
       }
     }
 
-    registerMutation.mutate(registerPayload);
+    registerMutation.mutate(registerPayload, {
+      onSuccess: () => {
+        toast.success("Inscription réussie !");
+        router.push("/login");
+      },
+      onError: (error: any) => {
+        toast.error(
+          error?.response?.data?.message ||
+            "Une erreur est survenue lors de l'inscription"
+        );
+      },
+    });
   };
 
   const handleBack = () => {

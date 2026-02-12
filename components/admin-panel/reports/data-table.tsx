@@ -64,7 +64,7 @@ export function DataTable<TData, TValue>({
             onChange={(event) =>
               table.getColumn("id")?.setFilterValue(event.target.value)
             }
-            className="pl-10 h-11 border-gray-200 focus:ring-2 focus:ring-blue-500"
+            className="pl-10 h-11 border-gray-200 focus:ring-2 focus:ring-brand-500 bg-white"
           />
         </div>
 
@@ -85,7 +85,7 @@ export function DataTable<TData, TValue>({
                 className={`
                   rounded-full px-4 transition-all border
                   ${filterType === filter.value
-                    ? "bg-blue-100 text-blue-700 border-blue-300 font-medium"
+                    ? "bg-brand-100 text-brand-600 border-brand-300 font-medium"
                     : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
                   }
                 `}

@@ -77,7 +77,7 @@ export default function AddAdminDialog({ onAdminAdded }: AddAdminDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-[var(--BRAND-500)]/80 hover:bg-[var(--BRAND-500)] text-white">
+        <Button className="bg-brand-500/80 hover:bg-[var(--BRAND-500)] text-white">
           <Plus className="w-4 h-4 mr-2" />
           Ajouter Admin
         </Button>

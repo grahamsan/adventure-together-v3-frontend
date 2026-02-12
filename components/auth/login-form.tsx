@@ -16,7 +16,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useLogin } from "@/features/auth/queries";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { useAuthControllerLogin } from "@/api/auth/hooks";
 
 // --- 1. Schéma Zod pour la Connexion ---
 const loginSchema = z.object({
@@ -35,7 +37,8 @@ const defaultValues: LoginFormValues = {
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const loginMutation = useLogin();
+  const router = useRouter();
+  const loginMutation = useAuthControllerLogin();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -45,7 +48,24 @@ export default function LoginForm() {
 
   // Fonction de soumission
   const onSubmit = (data: LoginFormValues) => {
-    loginMutation.mutate(data);
+    loginMutation.mutate(data, {
+      onSuccess: (response) => {
+        // Stocker le token (gère les deux structures possibles)
+        const token = response?.accessToken || response?.data?.accessToken;
+        if (token) {
+          localStorage.setItem("ACCESS_TOKEN", token);
+        }
+
+        toast.success("Bon retour parmi nous !");
+        router.push("/home");
+      },
+      onError: (error: any) => {
+        const errorMessage =
+          error?.response?.data?.message ||
+          "Échec de la connexion. Veuillez vérifier vos identifiants.";
+        toast.error(errorMessage);
+      },
+    });
   };
 
   return (

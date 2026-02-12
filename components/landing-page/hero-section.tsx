@@ -6,13 +6,22 @@ import { MapPin, Calendar, DollarSign, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRef } from "react";
 import { GradualSpacing } from "@/components/shared/text-animations/gradual-spacing";
+import { useRouter } from "next/navigation";
 
 export default function HeroSection() {
   const containerRef = useRef<HTMLElement>(null);
+  const router = useRouter();
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"],
   });
+
+  const handleRegister = () => {
+    router.push("/register");
+  };
+  const handleLogin = () => {
+    router.push("/login");
+  };
 
   // Parallax transformations
   const yBackground = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
@@ -75,7 +84,7 @@ export default function HeroSection() {
               />
               <GradualSpacing
                 text="Inoubliables"
-                className="text-4xl md:text-5xl lg:text-7xl font-bold text-[[var(--BRAND-500)]] leading-tight"
+                className="text-4xl md:text-5xl lg:text-7xl font-bold text-BRAND-600 leading-tight"
               />
             </div>
 
@@ -91,7 +100,7 @@ export default function HeroSection() {
             </motion.p>
 
             {/* Search Bar - Décommenté et corrigé */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
@@ -127,7 +136,23 @@ export default function HeroSection() {
               <Button className="bg-[[var(--BRAND-500)]] hover:bg-[#4096ea] text-white px-8 rounded-xl shadow-lg shadow-blue-200 transition-all hover:scale-105">
                 <Search className="w-5 h-5" />
               </Button>
-            </motion.div>
+            </motion.div> */}
+            <div className="flex gap-x-2 items-center">
+              <Button
+                variant="outline"
+                onClick={handleRegister}
+                className="bg-white"
+              >
+                Rejoindre
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleLogin}
+                className="bg-white"
+              >
+                Se connecter
+              </Button>
+            </div>
           </motion.div>
 
           {/* Right Column - Reserved space for layout */}

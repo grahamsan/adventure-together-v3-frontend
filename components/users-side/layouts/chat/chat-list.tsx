@@ -87,7 +87,7 @@ const mockChats: Chat[] = [
   {
     id: 4,
     tripId: "trip3",
-    tripName: "Bordeaux → Toulouse",
+    tripName: "Porto-Novo → Ouidah",
     tripDate: new Date(2025, 11, 23),
     participants: 4,
     userName: "Emma Rousseau",
@@ -143,7 +143,8 @@ const ChatCard: React.FC<ChatCardProps> = ({ chat, searchQuery, onClick }) => {
   return (
     <div
       onClick={onClick}
-      className="flex items-start gap-3 p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+      className="flex items-start gap-3 p-4 bg-second-300 hover:bg-second-100 cursor-pointer 
+      transition-all duration-500 rounded-[18px] transition-all duration-500"
     >
       <div className="relative flex-shrink-0">
         <img
@@ -277,9 +278,9 @@ export default function ChatList() {
 
       <div className="px-4 pt-4 pb-3 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
+          <h1 className="text-2xl font-bold text-brand-800">Messages</h1>
           {totalUnread > 0 && (
-            <span className="bg-[var(--BRAND-500)] text-white text-xs font-medium px-2.5 py-1 rounded-full">
+            <span className="bg-second-500 text-white text-xs font-medium px-2.5 py-1 rounded-full">
               {totalUnread} nouveau{totalUnread > 1 ? "x" : ""}
             </span>
           )}
@@ -349,7 +350,7 @@ export default function ChatList() {
                     </CustomAccordionTrigger>
                   </AccordionTrigger>
                   <AccordionContent className="pb-0 pt-0">
-                    <div className="bg-[#fcf1e8] rounded-[12px] mx-[5%]">
+                    <div className="bg-second-50 rounded-[12px] p-[3%] flex flex-col gap-y-2">
                       {trip.chats.map((chat) => (
                         <ChatCard
                           key={chat.id}

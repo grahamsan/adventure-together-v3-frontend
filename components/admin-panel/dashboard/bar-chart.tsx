@@ -43,8 +43,8 @@ export function BarChart({ title, subtitle, data }: BarChartProps) {
                 <div
                   className={`w-full rounded-t-xl transition-all duration-300 hover:opacity-80 ${
                     isHighlighted 
-                      ? 'bg-gradient-to-t from-blue-500 to-blue-400' 
-                      : 'bg-gradient-to-t from-blue-200 to-blue-100'
+                      ? 'bg-gradient-to-t from-second-500 to-second-300' 
+                      : 'bg-gradient-to-t from-second-100 to-second-50'
                   }`}
                   style={{ 
                     height: `${height}%`,

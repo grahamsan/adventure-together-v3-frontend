@@ -1,4 +1,4 @@
-import { MoreVertical, Car, Zap, Pencil, Trash2 } from "lucide-react";
+import { MoreVertical, Car, Pencil, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,39 +6,30 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ImageGridPreview from "./image-grid-preview";
+import { Vehicle } from "@/api/vehicles/types";
 
 export interface VehicleCardProps {
-  brand: string;
-  model: string;
-  images: string[];
-  plateNumber: string;
-  isElectric?: boolean;
-  status: "Active" | "Inactive";
-  onEdit?: () => void;
-  onDelete?: () => void;
+  vehicle: Vehicle;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 export default function VehicleCard({
-  brand,
-  model,
-  images,
-  plateNumber,
-  isElectric = false,
-  status,
+  vehicle,
   onEdit,
   onDelete,
 }: VehicleCardProps) {
-  const remainingImages = images.length - 2;
-
   return (
     <div className="w-full flex flex-col max-h-[400px] gap-4 p-4 rounded-xl border bg-white">
-      <ImageGridPreview images={images} />
+      <ImageGridPreview images={[vehicle.imageUrl]} />
 
       <div className="flex-1 min-h-0 p-2">
         <div className="flex items-start justify-between mb-3">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">{brand}</h3>
-            <p className="text-sm text-gray-500">{model}</p>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {vehicle.brand}
+            </h3>
+            <p className="text-sm text-gray-500">{vehicle.model}</p>
           </div>
 
           <DropdownMenu>
@@ -48,12 +39,15 @@ export default function VehicleCard({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={onEdit} className="cursor-pointer">
+              <DropdownMenuItem
+                onClick={() => onEdit?.(vehicle.id)}
+                className="cursor-pointer"
+              >
                 <Pencil className="w-4 h-4 mr-2" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={onDelete}
+                onClick={() => onDelete?.(vehicle.id)}
                 className="cursor-pointer text-red-600 focus:text-red-600"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
@@ -65,18 +59,10 @@ export default function VehicleCard({
 
         <div className="mb-4">
           <div
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg ${
-              isElectric
-                ? "bg-blue-50 text-blue-700"
-                : "bg-gray-100 text-gray-700"
-            }`}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700`}
           >
-            {isElectric ? (
-              <Zap className="w-4 h-4" />
-            ) : (
-              <Car className="w-4 h-4" />
-            )}
-            <span className="text-sm font-medium">{plateNumber}</span>
+            <Car className="w-4 h-4" />
+            <span className="text-sm font-medium">{vehicle.plateNumber}</span>
           </div>
         </div>
       </div>
