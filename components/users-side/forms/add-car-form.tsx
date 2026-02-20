@@ -19,7 +19,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Upload, Plus, Car } from "lucide-react";
+import { Upload, Plus, Car, Loader2 } from "lucide-react";
 import { useVehiclesControllerCreate } from "@/api/vehicles/hooks";
 import { useUploadControllerUploadMultiple } from "@/api/upload/hooks";
 import toast from "react-hot-toast";
@@ -28,7 +28,10 @@ const vehicleSchema = z.object({
   brand: z.string().min(2, "La marque doit contenir au moins 2 caractères"),
   model: z.string().min(2, "Le modèle doit contenir au moins 2 caractères"),
   plateNumber: z.string().optional(),
-  seats: z.number().min(1, "Le nombre de places doit être au moins 1").max(50, "Maximum 50 places"),
+  seats: z
+    .number()
+    .min(1, "Le nombre de places doit être au moins 1")
+    .max(50, "Maximum 50 places"),
   image: z.instanceof(File).optional(),
 });
 
@@ -68,7 +71,7 @@ export default function CreateVehicleForm({
         formData.append("files", values.image);
 
         const uploadResponse = await uploadMutation.mutateAsync(
-          formData as any
+          formData as any,
         );
 
         if (uploadResponse?.data && uploadResponse.data.length > 0) {
@@ -94,9 +97,7 @@ export default function CreateVehicleForm({
       setImagePreview(null);
     } catch (error: any) {
       console.error("Error creating vehicle:", error);
-      toast.error(
-        "Une erreur est survenue lors de la création du véhicule."
-      );
+      toast.error("Une erreur est survenue lors de la création du véhicule.");
     }
   };
 
@@ -148,7 +149,10 @@ export default function CreateVehicleForm({
                     <FormItem>
                       <FormLabel>Marque</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ex: Renault, Peugeot..." {...field} />
+                        <Input
+                          placeholder="Ex: Renault, Peugeot..."
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -198,7 +202,9 @@ export default function CreateVehicleForm({
                           min="1"
                           max="50"
                           {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value))
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -280,9 +286,14 @@ export default function CreateVehicleForm({
                     }
                   >
                     {createVehicleMutation.isPending ||
-                    uploadMutation.isPending
-                      ? "Création..."
-                      : "Créer le véhicule"}
+                    uploadMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Création...
+                      </>
+                    ) : (
+                      "Créer le véhicule"
+                    )}
                   </Button>
                 </div>
               </>

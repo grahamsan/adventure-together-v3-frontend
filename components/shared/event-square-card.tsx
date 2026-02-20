@@ -2,17 +2,20 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Compass, MapPin, Clock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import EventDetailsDrawer from "./drawers/event-details-drawer";
+import EventDetailsSheet from "./drawers/event-details-drawer";
 import { Experience } from "@/api/experiences/types";
 import { formatTimestamp } from "@/utils/format-timestamp";
 import { formatRelativeDate } from "@/utils/format-relative-date";
 import ImageGridPreview from "./image-grid-preview";
+import { useExperiencesControllerToggleLike } from "@/api/experiences/hooks";
+import UserAvatarComponent from "./user-avatar-component";
 
 export default function EventSquareCard({
   experience,
 }: {
   experience: Experience;
 }) {
+  const { mutateAsync: toggleLike } = useExperiencesControllerToggleLike();
   const [isDetailsDrawerOpen, setIsDetailsDrawerOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -27,13 +30,13 @@ export default function EventSquareCard({
 
   return (
     <>
-      <div className="w-full lg:w-auto lg:max-w-[40vw] h-auto bg-white border-[0.5px] border-gray-200 rounded-[18px]">
-        {/* HEADER */}
+      <div className="flex flex-col relative w-full h-[500px] justify-around bg-white border-[0.5px] border-gray-200 rounded-[8px]">
         <div className="flex items-center gap-3 p-4 pb-3">
-          <Avatar className="w-10 h-10">
-            <AvatarImage src={owner.avatarUrl} />
-            <AvatarFallback>{owner.fullName[0]}</AvatarFallback>
-          </Avatar>
+          <UserAvatarComponent
+            fullname={owner.fullName}
+            avatar={owner.avatarUrl}
+            size={40}
+          />
 
           <div>
             <p className="font-semibold text-sm text-gray-900">
@@ -46,8 +49,12 @@ export default function EventSquareCard({
         </div>
 
         {/* IMAGES */}
-        <div className="w-[95%] mx-auto  flex gap-2 rounded-[12px] overflow-hidden">
-          <ImageGridPreview images={[event.image]} />
+        <div className="w-[95%] h-[300px] mx-auto  flex gap-2 rounded-[12px] overflow-hidden">
+          <img
+            src={event.image}
+            alt={event.title}
+            className="w-full h-full object-cover"
+          />
         </div>
 
         {/* CONTENT */}
@@ -86,44 +93,42 @@ export default function EventSquareCard({
           </div>
 
           {/* ACTION BUTTONS */}
-          <div className="flex border-t border-gray-200 py-1 -mx-4">
-            <Button
-              variant="ghost"
-              className="flex-1 rounded-none hover:bg-gray-100 text-gray-600 font-medium h-10 flex items-center justify-center gap-2"
+          <div className="flex border-t border-gray-200 py-1 -mx-4 mt-auto">
+            <button
+              onClick={() => toggleLike({ id: event.id })}
+              className="cursor-pointer flex-1 hover:text-brand-500 text-gray-600 font-medium h-10 flex items-center justify-center gap-2"
             >
               <Heart className="w-5 h-5" />
-              <span>Intéressés</span>
-              <span className="text-gray-500 text-sm">({stats.interests})</span>
-            </Button>
+              <span className="hidden lg:flex">Intéressés</span>
+              <span className="text-gray-500 text-sm">({stats.likes})</span>
+            </button>
 
-            <Button
-              variant="ghost"
+            <button
               onClick={() => setIsDetailsDrawerOpen(true)}
-              className="flex-1 rounded-none hover:bg-gray-100 text-gray-600 font-medium h-10 flex items-center justify-center gap-2"
+              className="cursor-pointer flex-1 hover:text-brand-500 text-gray-600 font-medium h-10 flex items-center justify-center gap-2"
             >
               <MessageCircle className="w-5 h-5" />
-              <span>Commentaires</span>
+              <span className="hidden lg:flex">Commentaires</span>
               <span className="text-gray-500 text-sm">({stats.comments})</span>
-            </Button>
+            </button>
 
-            <Button
-              variant="ghost"
-              className="flex-1 rounded-none hover:bg-gray-100 text-gray-600 font-medium h-10 flex items-center justify-center gap-2"
+            <button
+              onClick={() => setIsDetailsDrawerOpen(true)}
+              className="cursor-pointer flex-1 hover:text-brand-500 text-gray-600 font-medium h-10 flex items-center justify-center gap-2"
             >
               <Compass className="w-5 h-5" />
-              <span>Trajets</span>
+              <span className="hidden lg:flex">Trajets</span>
               <span className="text-gray-500 text-sm">({stats.trips})</span>
-            </Button>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* DRAWER */}
-      <EventDetailsDrawer
-      experienceId={experience.id}
-      eventTitle={experience.title}
-      open={isDetailsDrawerOpen}
-      onOpenChange={setIsDetailsDrawerOpen}
+      <EventDetailsSheet
+        experienceId={experience.id}
+        eventTitle={experience.title}
+        open={isDetailsDrawerOpen}
+        onOpenChange={setIsDetailsDrawerOpen}
       />
     </>
   );

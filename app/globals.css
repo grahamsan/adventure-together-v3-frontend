@@ -41,10 +41,10 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --color-brand-900:var(--BRAND-900);
+  --color-brand-900: var(--BRAND-900);
   --color-brand-800: var(--BRAND-800);
   --color-brand-600: var(--BRAND-600);
-  --color-brand-500: var(--BRAND-500);  
+  --color-brand-500: var(--BRAND-500);
   --color-brand-400: var(--BRAND-400);
   --color-brand-300: var(--BRAND-300);
   --color-brand-200: var(--BRAND-200);
@@ -91,19 +91,19 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   --font-sans: var(--font-plus-jakarta-sans);
-  --BRAND-900:#3b0d04;
-  --BRAND-800:#701a08;
-  --BRAND-600:#ba2a0b;
+  --BRAND-900: #3b0d04;
+  --BRAND-800: #701a08;
+  --BRAND-600: #ba2a0b;
   --BRAND-500: #f76c4e;
   --BRAND-400: #fa8b73;
   --BRAND-300: #f0b58b;
-  --BRAND-200:#f7cfc6;
-  --BRAND-100:#f7d9d2;
-  --BRAND-50:#faeeeb;
+  --BRAND-200: #f7cfc6;
+  --BRAND-100: #f7d9d2;
+  --BRAND-50: #faeeeb;
   --SECOND-500: #088f76;
   --SECOND-300: #5fe8cf;
   --SECOND-100: #9ff5e5;
-  --SECOND-50:#e4f2f0;
+  --SECOND-50: #e4f2f0;
   --TERS-500: #343a40;
 }
 
@@ -217,6 +217,31 @@
 }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+.scrollbar-custom {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #e5e7eb #f9fafb; /* thumb and track colors */
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+  width: 8px; /* Width of scrollbar */
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: #f9fafb; /* Track color */
+  border-radius: 10px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: #e5e7eb; /* Thumb color */
+  border-radius: 10px;
+  border: 2px solid #f9fafb; /* Creates padding effect */
+  transition: background 0.2s ease;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db; /* Darker on hover */
 }
 
 @keyframes spin-slow {

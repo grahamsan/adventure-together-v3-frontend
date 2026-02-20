@@ -28,7 +28,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarIcon, Upload, Plus } from "lucide-react";
+import { CalendarIcon, Upload, Plus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useExperiencesControllerCreate } from "@/api/experiences/hooks";
 import { useUploadControllerUploadMultiple } from "@/api/upload/hooks";
@@ -84,7 +84,7 @@ export default function CreateEventForm({
 
         // Cast to any to bypass the incorrect generated type definition for upload payload
         const uploadResponse = await uploadMutation.mutateAsync(
-          formData as any
+          formData as any,
         );
 
         if (uploadResponse?.data && uploadResponse.data.length > 0) {
@@ -113,7 +113,7 @@ export default function CreateEventForm({
     } catch (error: any) {
       console.error("Error creating event:", error);
       toast.error(
-        "Une erreur est survenue lors de la création de l'événement."
+        "Une erreur est survenue lors de la création de l'événement.",
       );
     }
   };
@@ -216,7 +216,7 @@ export default function CreateEventForm({
                               <div
                                 className={cn(
                                   "w-full justify-start text-left font-normal flex items-center gap-x-2 bg-green-50 p-2 w-fit rounded-lg text-green-500 font-semibold cursor-pointer",
-                                  !field.value && "text-muted-foreground"
+                                  !field.value && "text-muted-foreground",
                                 )}
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
@@ -252,7 +252,7 @@ export default function CreateEventForm({
                               <div
                                 className={cn(
                                   "w-full justify-start text-left font-normal flex items-center gap-x-2 bg-red-50 p-2 w-fit rounded-lg text-red-500 font-semibold cursor-pointer",
-                                  !field.value && "text-muted-foreground"
+                                  !field.value && "text-muted-foreground",
                                 )}
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
@@ -350,9 +350,14 @@ export default function CreateEventForm({
                     }
                   >
                     {createExperienceMutation.isPending ||
-                    uploadMutation.isPending
-                      ? "Création..."
-                      : "Créer l'événement"}
+                    uploadMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Création...
+                      </>
+                    ) : (
+                      "Créer l'événement"
+                    )}
                   </Button>
                 </div>
               </>

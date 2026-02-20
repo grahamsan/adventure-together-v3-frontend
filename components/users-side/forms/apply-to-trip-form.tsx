@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, InfoIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,25 +22,58 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useTripsControllerApply } from "@/api/trips/hooks";
+import toast from "react-hot-toast";
 
 const applyToTripSchema = z.object({
   message: z
     .string()
     .min(1, "Veuillez entrer un message")
     .max(1000, "Le message est trop long"),
+  requestedSeats: z.coerce
+    .number()
+    .min(1, "Au moins 1 place")
+    .max(10, "Maximum 10 places"), // Adjust max as needed or based on prop
 });
 
-export default function ApplyToTripForm() {
-  const form = useForm<z.infer<typeof applyToTripSchema>>({
-    resolver: zodResolver(applyToTripSchema),
+type ApplyToTripFormValues = z.infer<typeof applyToTripSchema>;
+
+export default function ApplyToTripForm({
+  tripId,
+  hasApplied,
+  seatsAvailable,
+}: {
+  tripId: string;
+  hasApplied: boolean;
+  seatsAvailable: number;
+}) {
+  const form = useForm<ApplyToTripFormValues>({
+    resolver: zodResolver(applyToTripSchema) as any,
     defaultValues: {
       message: "",
+      requestedSeats: 1,
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof applyToTripSchema>) => {
-    console.log("Submitting...", values);
-    // 🔥 API call here
+  const applyMutation = useTripsControllerApply();
+
+  const onSubmit = async (values: ApplyToTripFormValues) => {
+    applyMutation.mutate(
+      {
+        id: tripId,
+        message: values.message,
+        requestedSeats: values.requestedSeats,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Candidature envoyée !");
+          form.reset();
+        },
+        onError: (error: any) => {
+          toast.error("Erreur lors de l'envoi de la candidature.");
+        },
+      },
+    );
   };
 
   return (
@@ -49,7 +83,10 @@ export default function ApplyToTripForm() {
       }}
     >
       <DialogTrigger asChild>
-        <Button className="flex-1 bg-[var(--BRAND-500)] hover:bg-amber-700 text-white rounded-full h-[42px] font-medium">
+        <Button
+          disabled={hasApplied}
+          className="flex-1 bg-[var(--BRAND-500)] hover:bg-amber-700 text-white rounded-full h-[42px] font-medium"
+        >
           Postuler
         </Button>
       </DialogTrigger>
@@ -64,6 +101,29 @@ export default function ApplyToTripForm() {
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex flex-col gap-6"
           >
+            <div className="flex gap-4">
+              {/* Champ Places */}
+              <FormField
+                control={form.control}
+                name="requestedSeats"
+                render={({ field }) => (
+                  <FormItem className="w-1/3">
+                    <FormLabel>Places</FormLabel>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={seatsAvailable}
+                      {...field}
+                      onChange={(e) =>
+                        field.onChange(e.target.valueAsNumber || 1)
+                      }
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             {/* Champ Message */}
             <FormField
               control={form.control}
@@ -81,22 +141,18 @@ export default function ApplyToTripForm() {
               )}
             />
 
-            {/* Bloc d’information */}
-            <div className="flex items-center gap-x-2 text-sm text-red-700 bg-red-50 rounded-lg px-2 py-1">
-              <InfoIcon className="w-5 h-5 text-red-700" />
-              <p>
-                Vous allez être redirigé vers une conversation privée avec
-                l'auteur de l'annonce
-              </p>
-            </div>
-
             {/* Boutons */}
             <div className="flex justify-end gap-3 pt-2">
               <DialogClose asChild>
                 <Button variant="outline">Annuler</Button>
               </DialogClose>
 
-              <Button type="submit">Postuler</Button>
+              <Button type="submit" disabled={applyMutation.isPending}>
+                {applyMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Postuler
+              </Button>
             </div>
           </form>
         </Form>

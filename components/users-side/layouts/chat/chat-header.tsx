@@ -12,23 +12,35 @@ import {
 type ChatHeaderProps = {
   chatName: string;
   onBack: () => void;
+  tripName: string;
 };
 
-export default function ChatHeader({ chatName, onBack }: ChatHeaderProps) {
+export default function ChatHeader({
+  chatName,
+  onBack,
+  tripName,
+}: ChatHeaderProps) {
   return (
     <div
-      className="flex items-center justify-between px-4 h-14 border-b 
-    border-gray-200 bg-second-100 rounded-t-[18px]"
+      className="flex flex-1 items-center justify-between px-4 h-14 border-b 
+    border-gray-200 bg-second-100 rounded-[8px]"
     >
-      <Button variant="ghost" size="icon" onClick={onBack} className="bg-brand-500 hover:bg-brand-300 
-      transition-all duration-500 rounded-full">
+      {/* <Button
+        variant="ghost"
+        size="icon"
+        onClick={onBack}
+        className="bg-brand-500 hover:bg-brand-300 
+      transition-all duration-500 rounded-full"
+      >
         <ChevronLeft className="w-5 h-5 text-white" />
-      </Button>
-
-      <h1 className="text-base font-semibold text-gray-900 truncate">
-        {chatName}
-      </h1>
-
+      </Button> */}
+      <div className="flex flex-col gap-y-1 text-left">
+        <h1 className="text-base font-semibold text-zinc-900 truncate">
+          {chatName}
+        </h1>
+        <p className="text-xs text-brand-500">{tripName}</p>
+      </div>
+      {/* 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon">
@@ -43,7 +55,7 @@ export default function ChatHeader({ chatName, onBack }: ChatHeaderProps) {
             Supprimer la discussion
           </DropdownMenuItem>
         </DropdownMenuContent>
-      </DropdownMenu>
+      </DropdownMenu> */}
     </div>
   );
 }

@@ -13,15 +13,21 @@ export const metadata: Metadata = {
   description: "Administration panel for Adventure Together platform",
 };
 
+import AdminGuard from "./admin-guard";
+
 export default function AdminPanelLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <div className={`${plusJakartaSans.className} antialiased`}>
-      <AdminSidebar />
-      <main className="lg:ml-24 transition-all duration-300 bg-second-50">{children}</main>
-    </div>
+    <AdminGuard>
+      <div className={`${plusJakartaSans.className} antialiased`}>
+        <AdminSidebar />
+        <main className="lg:ml-24 transition-all duration-300 bg-second-50">
+          {children}
+        </main>
+      </div>
+    </AdminGuard>
   );
 }

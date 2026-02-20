@@ -4,7 +4,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import {
   Form,
   FormField,
@@ -92,7 +92,6 @@ export default function LoginForm() {
               )}
             />
 
-            {/* Champ Mot de passe avec Toggle */}
             <FormField
               control={form.control}
               name="password"
@@ -127,7 +126,14 @@ export default function LoginForm() {
             />
 
             {/* Bouton de Soumission */}
-            <Button type="submit" className="w-full">
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loginMutation.isPending}
+            >
+              {loginMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Se connecter
             </Button>
 

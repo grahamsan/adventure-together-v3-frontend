@@ -1,33 +1,10 @@
 import React, { useState, useMemo } from "react";
-import { Search, MapPin, Calendar, Users } from "lucide-react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Search, MapPin, MessageCircle, Loader2 } from "lucide-react";
 import Chat from "./chat-component";
-
-// Types
-type Chat = {
-  id: number;
-  tripId: string;
-  tripName: string;
-  tripDate: Date;
-  participants: number;
-  userName: string;
-  lastMessage: string;
-  timestamp: string;
-  unread: number;
-  avatar: string;
-};
-
-type Trip = {
-  tripName: string;
-  tripDate: Date;
-  participants: number;
-  chats: Chat[];
-};
+import { useConversationsControllerFindAll } from "@/api/conversations/hooks";
+import { useUserControllerGetMe } from "@/api/users/hooks";
+import { Conversation } from "@/api/conversations/types";
+import UserAvatarComponent from "@/components/shared/user-avatar-component";
 
 type HighlightedTextProps = {
   text: string;
@@ -35,92 +12,43 @@ type HighlightedTextProps = {
 };
 
 type ChatCardProps = {
-  chat: Chat;
+  chat: Conversation;
+  currentUserId: string;
   searchQuery: string;
   onClick: () => void;
 };
 
-type CustomAccordionTriggerProps = {
-  children: React.ReactNode;
-  isOpen: boolean;
-  tripCount: number;
-};
-
-// Données de test
-const mockChats: Chat[] = [
-  {
-    id: 1,
-    tripId: "trip1",
-    tripName: "Coronou → Port-Novo",
-    tripDate: new Date(2025, 11, 8),
-    participants: 3,
-    userName: "Marie Dubois",
-    lastMessage: "Je serai à la gare à 14h précises. N'oublie pas...",
-    timestamp: "10:30",
-    unread: 2,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marie",
-  },
-  {
-    id: 2,
-    tripId: "trip1",
-    tripName: "Cotonou → Ouidah",
-    tripDate: new Date(2025, 11, 8),
-    participants: 3,
-    userName: "Jean Martin",
-    lastMessage: "Parfait! Je prends mon sac de voyage cl...",
-    timestamp: "09:15",
-    unread: 0,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jean",
-  },
-  {
-    id: 3,
-    tripId: "trip2",
-    tripName: "Parakou → Nikki",
-    tripDate: new Date(2025, 11, 9),
-    participants: 2,
-    userName: "Sophie Laurent",
-    lastMessage: "On peut faire une pause café à mi-chemin...",
-    timestamp: "Hier",
-    unread: 1,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie",
-  },
-  {
-    id: 4,
-    tripId: "trip3",
-    tripName: "Porto-Novo → Ouidah",
-    tripDate: new Date(2025, 11, 23),
-    participants: 4,
-    userName: "Emma Rousseau",
-    lastMessage: "Le départ est toujours prévu pour 8h ...",
-    timestamp: "2 jours",
-    unread: 0,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emma",
-  },
-];
-
 // Fonctions utilitaires
-const formatRelativeDate = (date: Date): string => {
-  const today = new Date(2025, 11, 8);
-  const diffTime = date.getTime() - today.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+const formatMessageDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffDays = Math.floor(
+    (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
+  );
 
-  if (diffDays === 0) return "Aujourd'hui";
-  if (diffDays === 1) return "Demain";
-  if (diffDays === 2) return "Après-demain";
-  if (diffDays >= 3 && diffDays <= 7) return `Dans ${diffDays} jours`;
-  if (diffDays > 7 && diffDays <= 14) return "Dans une semaine";
-  if (diffDays > 14 && diffDays <= 21) return "Dans deux semaines";
-  if (diffDays > 21 && diffDays <= 30) return "Dans trois semaines";
-
-  return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  if (diffDays === 0) {
+    return date.toLocaleTimeString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } else if (diffDays === 1) {
+    return "Hier";
+  } else if (diffDays < 7) {
+    return date.toLocaleDateString("fr-FR", { weekday: "short" });
+  } else {
+    return date.toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+    });
+  }
 };
 
 const HighlightedText: React.FC<HighlightedTextProps> = ({ text, search }) => {
-  if (!search.trim()) return <span>{text}</span>;
+  if (!search.trim() || !text) return <span>{text || ""}</span>;
 
   const regex = new RegExp(
     `(${search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
-    "gi"
+    "gi",
   );
   const parts = text.split(regex);
 
@@ -133,71 +61,75 @@ const HighlightedText: React.FC<HighlightedTextProps> = ({ text, search }) => {
           </mark>
         ) : (
           <span key={i}>{part}</span>
-        )
+        ),
       )}
     </span>
   );
 };
 
-const ChatCard: React.FC<ChatCardProps> = ({ chat, searchQuery, onClick }) => {
+const ChatCard: React.FC<ChatCardProps> = ({
+  chat,
+  currentUserId,
+  searchQuery,
+  onClick,
+}) => {
+  const lastMessage = chat.lastMessage;
+  const unreadCount = chat.unreadCount;
+
+  const chatName =
+    chat?.type === "user2user"
+      ? chat?.destinataireName
+      : chat?.name || "Conversation";
+
+  const tripRoute = chat.trip ? `${chat.trip.from} → ${chat.trip.to}` : "";
+  const avatarSeed =
+    chat.type === "group" ? chat.id : chat.destinataireId || chat.id;
+
   return (
     <div
       onClick={onClick}
-      className="flex items-start gap-3 p-4 bg-second-300 hover:bg-second-100 cursor-pointer 
-      transition-all duration-500 rounded-[18px] transition-all duration-500"
+      className="flex items-start gap-4 p-4 bg-white hover:bg-gray-50 cursor-pointer 
+      transition-all duration-200 border-b border-gray-100 last:border-0"
     >
       <div className="relative flex-shrink-0">
-        <img
-          src={chat.avatar}
-          alt={chat.userName}
-          className="w-12 h-12 rounded-full"
-        />
-        {chat.unread > 0 && (
-          <div className="absolute -top-1 -right-1 bg-[var(--BRAND-500)] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-            {chat.unread}
+        <UserAvatarComponent size={40} avatar="" fullname={chatName} />
+        {unreadCount > 0 && (
+          <div className="absolute -top-1 -right-1 bg-[var(--BRAND-500)] text-white text-[10px] rounded-full min-w-[1.25rem] h-5 px-1 flex items-center justify-center font-bold border-2 border-white">
+            {unreadCount}
           </div>
         )}
       </div>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
-          <h3 className="font-semibold text-gray-900 truncate text-[15px]">
-            <HighlightedText text={chat.userName} search={searchQuery} />
+          <h3
+            className={`font-semibold text-gray-900 truncate text-[15px] ${unreadCount > 0 ? "text-brand-900" : ""}`}
+          >
+            <HighlightedText text={chatName} search={searchQuery} />
           </h3>
-          <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
-            {chat.timestamp}
+          <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
+            {lastMessage ? formatMessageDate(lastMessage.timestamp) : ""}
           </span>
         </div>
 
+        {tripRoute && (
+          <div className="flex items-center gap-1 text-xs text-[var(--BRAND-500)] font-medium mb-1">
+            <MapPin className="w-3 h-3" />
+            <span className="truncate">{tripRoute}</span>
+          </div>
+        )}
+
         <p
           className={`text-sm truncate ${
-            chat.unread > 0 ? "text-gray-900 font-normal" : "text-gray-500"
+            unreadCount > 0 ? "text-gray-900 font-medium" : "text-gray-500"
           }`}
         >
-          <HighlightedText text={chat.lastMessage} search={searchQuery} />
+          {lastMessage?.senderId === currentUserId && "Vous : "}
+          <HighlightedText
+            text={lastMessage?.content || "Aucun message"}
+            search={searchQuery}
+          />
         </p>
-      </div>
-    </div>
-  );
-};
-
-const CustomAccordionTrigger: React.FC<CustomAccordionTriggerProps> = ({
-  children,
-  isOpen,
-  tripCount,
-}) => {
-  return (
-    <div className="flex items-center justify-between w-full px-4 py-3 hover:bg-gray-50 cursor-pointer">
-      <div className="flex items-start gap-3 flex-1">
-        <div className="bg-[#fde6d4] p-2.5 rounded-lg mt-0.5">
-          <MapPin className="w-5 h-5 text-[var(--BRAND-500)]" />
-        </div>
-        {children}
-      </div>
-      <div className="flex items-center gap-3 ml-3">
-        <span className="text-xs text-gray-600 font-normal whitespace-nowrap">
-          {tripCount} chat{tripCount > 1 ? "s" : ""}
-        </span>
       </div>
     </div>
   );
@@ -206,54 +138,45 @@ const CustomAccordionTrigger: React.FC<CustomAccordionTriggerProps> = ({
 // Composant principal
 export default function ChatList() {
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [openItems, setOpenItems] = useState<string[]>([]);
   const [selectedChat, setSelectedChat] = useState<{
     id: string;
     name: string;
+    tripName: string;
+    tripId: string;
+    applyId: string;
+    applyStatus: string;
   } | null>(null);
 
-  const chatsByTrip: [string, Trip][] = useMemo(() => {
-    const grouped: Record<string, Trip> = {};
+  const { data: conversations, isLoading: isLoadingConversations } =
+    useConversationsControllerFindAll();
+  const { data: currentUser } = useUserControllerGetMe();
 
-    mockChats.forEach((chat) => {
-      if (!grouped[chat.tripId]) {
-        grouped[chat.tripId] = {
-          tripName: chat.tripName,
-          tripDate: chat.tripDate,
-          participants: chat.participants,
-          chats: [],
-        };
-      }
-      grouped[chat.tripId].chats.push(chat);
-    });
-
-    return Object.entries(grouped);
-  }, []);
-
-  const filteredTrips: [string, Trip][] = useMemo(() => {
-    if (!searchQuery.trim()) return chatsByTrip;
+  const filteredConversations = useMemo(() => {
+    if (!conversations) return [];
+    if (!searchQuery.trim()) return conversations;
 
     const query = searchQuery.toLowerCase();
 
-    return chatsByTrip
-      .map(([tripId, trip]) => {
-        const filteredChats = trip.chats.filter(
-          (chat) =>
-            chat.userName.toLowerCase().includes(query) ||
-            chat.lastMessage.toLowerCase().includes(query) ||
-            chat.tripName.toLowerCase().includes(query)
-        );
-        return filteredChats.length > 0
-          ? [tripId, { ...trip, chats: filteredChats }]
-          : null;
-      })
-      .filter(Boolean) as [string, Trip][];
-  }, [chatsByTrip, searchQuery]);
+    return conversations.filter((chat) => {
+      const nameMatch = chat.name?.toLowerCase().includes(query);
+      const messageMatch = chat.lastMessage?.content
+        .toLowerCase()
+        .includes(query);
+      const tripMatch = chat.trip
+        ? `${chat.trip.from} ${chat.trip.to}`.toLowerCase().includes(query)
+        : false;
 
-  const totalUnread: number = mockChats.reduce(
-    (sum, chat) => sum + chat.unread,
-    0
-  );
+      return nameMatch || messageMatch || tripMatch;
+    });
+  }, [conversations, searchQuery]);
+
+  const totalUnread = useMemo(() => {
+    if (!conversations) return 0;
+    return conversations.reduce(
+      (sum, chat) => sum + (chat.unreadCount || 0),
+      0,
+    );
+  }, [conversations]);
 
   if (selectedChat) {
     return (
@@ -261,115 +184,96 @@ export default function ChatList() {
         chatId={selectedChat.id}
         chatName={selectedChat.name}
         onBack={() => setSelectedChat(null)}
+        tripName={selectedChat.tripName}
+        tripId={selectedChat.tripId}
+        applyId={selectedChat.applyId}
+        applyStatus={selectedChat.applyStatus}
       />
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-white max-w-md mx-auto">
+    <div className="h-full flex flex-col bg-white px-4 rounded-[12px]">
       <style>{`
         :root {
           --BRAND-500: #f4a261;
         }
-        [data-state="open"] > button {
-          background-color: transparent;
-        }
       `}</style>
 
-      <div className="px-4 pt-4 pb-3 border-b border-gray-200 bg-white">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-brand-800">Messages</h1>
+      <div className="pt-6 pb-4 border-b border-gray-100 bg-white sticky top-0 z-10">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center h-10 w-10 bg-brand-50 text-brand-500 p-2 rounded-[10px]">
+              <MessageCircle className="w-5 h-5 mx-auto" />
+            </span>
+            <h1 className="text-2xl font-semibold text-second-500 tracking-tight">
+              Messages
+            </h1>
+          </div>
           {totalUnread > 0 && (
-            <span className="bg-second-500 text-white text-xs font-medium px-2.5 py-1 rounded-full">
-              {totalUnread} nouveau{totalUnread > 1 ? "x" : ""}
+            <span className="bg-[var(--BRAND-500)] text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+              {totalUnread}
             </span>
           )}
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-4.5 h-4.5" />
           <input
             type="text"
-            placeholder="Rechercher un message ou un voyage"
+            placeholder="Rechercher..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border-0 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--BRAND-500)] focus:bg-white transition-colors placeholder:text-gray-400"
+            className="w-full pl-10 pr-4 py-3 bg-gray-50 border-gray-100 rounded-xl text-sm 
+            focus:outline-none focus:ring-2 focus:ring-[var(--BRAND-500)]/20 focus:bg-white 
+            transition-all duration-200 placeholder:text-gray-400"
           />
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {filteredTrips.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500 p-8">
-            <Search className="w-16 h-16 mb-4 text-gray-300" />
-            <p className="text-lg font-medium">Aucun résultat</p>
-            <p className="text-sm text-center mt-2">
-              Essayez avec d'autres mots-clés
+        {isLoadingConversations ? (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="w-8 h-8 animate-spin text-[var(--BRAND-500)]" />
+          </div>
+        ) : filteredConversations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-gray-400 p-8">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+              <Search className="w-8 h-8 text-gray-300" />
+            </div>
+            <p className="text-base font-medium text-gray-900">
+              Aucune conversation
+            </p>
+            <p className="text-sm text-center mt-1 text-gray-500">
+              {searchQuery
+                ? "Aucun résultat pour votre recherche."
+                : "Vous n'avez pas encore de message."}
             </p>
           </div>
         ) : (
-          <Accordion
-            type="multiple"
-            value={openItems}
-            onValueChange={setOpenItems}
-            defaultValue={filteredTrips.map(([id]) => id)}
-            className="w-full"
-          >
-            {filteredTrips.map(([tripId, trip]) => {
-              const isOpen = openItems.includes(tripId);
-              return (
-                <AccordionItem
-                  key={tripId}
-                  value={tripId}
-                  className="border-b border-gray-100"
-                >
-                  <AccordionTrigger className="p-0 hover:no-underline [&[data-state=open]]:bg-transparent">
-                    <CustomAccordionTrigger
-                      isOpen={isOpen}
-                      tripCount={trip.chats.length}
-                    >
-                      <div className="flex-1 text-left">
-                        <h2 className="font-semibold text-gray-900 text-[15px] mb-1">
-                          <HighlightedText
-                            text={trip.tripName}
-                            search={searchQuery}
-                          />
-                        </h2>
-                        <div className="flex items-center justify-between text-xs text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3.5 h-3.5" />
-                            {formatRelativeDate(trip.tripDate)}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Users className="w-3.5 h-3.5" />
-                            {trip.participants} part
-                            {trip.participants > 1 ? "s" : ""}.
-                          </span>
-                        </div>
-                      </div>
-                    </CustomAccordionTrigger>
-                  </AccordionTrigger>
-                  <AccordionContent className="pb-0 pt-0">
-                    <div className="bg-second-50 rounded-[12px] p-[3%] flex flex-col gap-y-2">
-                      {trip.chats.map((chat) => (
-                        <ChatCard
-                          key={chat.id}
-                          chat={chat}
-                          searchQuery={searchQuery}
-                          onClick={() =>
-                            setSelectedChat({
-                              id: chat.tripId,
-                              name: chat.tripName,
-                            })
-                          }
-                        />
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              );
-            })}
-          </Accordion>
+          <div className="divide-y divide-gray-50">
+            {filteredConversations.map((chat) => (
+              <ChatCard
+                key={chat.id}
+                chat={chat}
+                currentUserId={currentUser?.id || ""}
+                searchQuery={searchQuery}
+                onClick={() =>
+                  setSelectedChat({
+                    id: chat.id,
+                    name:
+                      chat?.type === "user2user"
+                        ? chat?.destinataireName
+                        : chat?.name || "Conversation",
+                    tripName: chat?.name,
+                    tripId: chat?.tripId || "",
+                    applyId: chat?.applyId || "",
+                    applyStatus: chat?.applyStatus || "",
+                  })
+                }
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>

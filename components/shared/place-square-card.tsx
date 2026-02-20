@@ -19,7 +19,7 @@ export default function PlaceCard({
   pickupAvailable,
 }: PlaceCardProps) {
   return (
-    <div className="relative w-full h-[450px] rounded-[24px] overflow-hidden shadow-lg group cursor-pointer">
+    <div className="relative flex-1 w-full h-[450px] rounded-[24px] overflow-hidden shadow-lg group cursor-pointer">
       <img
         src={imageUrl}
         alt={title}
@@ -28,8 +28,10 @@ export default function PlaceCard({
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
-      <button className="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex 
-      items-center justify-center hover:bg-white/30 transition">
+      <button
+        className="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex 
+      items-center justify-center hover:bg-white/30 transition"
+      >
         <Bookmark className="w-5 h-5 text-white" />
       </button>
       <div className="absolute bottom-0 left-0 right-0 p-6 text-white">

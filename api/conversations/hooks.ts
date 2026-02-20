@@ -1,6 +1,6 @@
 // Auto-generated hooks
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '@/lib/query-keys';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import {
   conversationsControllerFindAll,
   conversationsControllerFindOne,
@@ -8,9 +8,9 @@ import {
   conversationsControllerCreateMessage,
   conversationsControllerUpdateMessage,
   conversationsControllerDeleteMessage,
-  conversationsControllerMarkAsRead
-} from './api';
-import type { CreateMessageDto, UpdateMessageDto } from './types';
+  conversationsControllerMarkAsRead,
+} from "./api";
+import type { CreateMessageDto, UpdateMessageDto } from "./types";
 
 // Query Hooks
 
@@ -25,18 +25,17 @@ export const useConversationsControllerFindOne = (id: string) => {
   return useQuery({
     queryKey: queryKeys.conversations.detail(id),
     queryFn: () => conversationsControllerFindOne(id),
-    enabled: !!(id),
+    enabled: !!id,
   });
 };
 
 export const useConversationsControllerGetMessages = (id: string) => {
   return useQuery({
-    queryKey: queryKeys.conversations.detail(id),
+    queryKey: queryKeys.conversations.message(id),
     queryFn: () => conversationsControllerGetMessages(id),
-    enabled: !!(id),
+    enabled: !!id,
   });
 };
-
 
 // Mutation Hooks
 
@@ -44,7 +43,8 @@ export const useConversationsControllerCreateMessage = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (vars: CreateMessageDto & { id: string }) => conversationsControllerCreateMessage(vars.id, vars),
+    mutationFn: ({ id, ...vars }: CreateMessageDto & { id: string }) =>
+      conversationsControllerCreateMessage(id, vars),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all });
     },
@@ -55,7 +55,8 @@ export const useConversationsControllerUpdateMessage = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (vars: UpdateMessageDto & { messageId: string }) => conversationsControllerUpdateMessage(vars.messageId, vars),
+    mutationFn: (vars: UpdateMessageDto & { messageId: string }) =>
+      conversationsControllerUpdateMessage(vars.messageId, vars),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all });
     },
@@ -66,7 +67,8 @@ export const useConversationsControllerDeleteMessage = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (vars: { messageId: string }) => conversationsControllerDeleteMessage(vars.messageId),
+    mutationFn: (vars: { messageId: string }) =>
+      conversationsControllerDeleteMessage(vars.messageId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all });
     },
@@ -77,10 +79,10 @@ export const useConversationsControllerMarkAsRead = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (vars: { id: string }) => conversationsControllerMarkAsRead(vars.id),
+    mutationFn: (vars: { id: string }) =>
+      conversationsControllerMarkAsRead(vars.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all });
     },
   });
 };
-

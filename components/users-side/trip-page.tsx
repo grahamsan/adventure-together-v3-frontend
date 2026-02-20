@@ -1,42 +1,77 @@
 "use client";
 
-import { mockedTrips } from "@/utils/mock-trips";
+import { useTripsControllerFindAll } from "@/api/trips/hooks";
+import { Loader2 } from "lucide-react";
 import TripSquareCard from "../shared/trip-square-card";
-import LeftSideSection from "./left-side-section";
-import AddNewSection from "./layouts/add-new-section";
-import RightSideSection from "./right-side-section";
+import TripsBanner from "./layouts/banners/trips-banner";
 
 export default function TripPage() {
-  return (
-    <div className="flex w-full justify-between min-h-screen">
-      <LeftSideSection
-        userRole="admin"
-        userAvatar="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-        userFullName="John Doe"
-      />
-      <div className="flex max-w-[50vw] justify-center items-center flex-col gap-y-2 pb-2">
-        <AddNewSection userFullName="John Doe" />
-        {mockedTrips.map((trip, index) => (
-          <TripSquareCard
-            key={index}
-            from={trip.from}
-            to={trip.to}
-            date={trip.date}
-            time={trip.time}
-            description={trip.description}
-            seatsConfirmed={trip.seatsConfirmed}
-            seatsAvailable={trip.seatsAvailable}
-            excales={trip.excales}
-            ownerFullName={trip.ownerFullName}
-            ownerAvatarUrl={trip.ownerAvatarUrl}
-            createdAt={trip.createdAt}
-            associatedEventName={trip.associatedEventName}
-            status={trip.status}
-            price={trip.price}
-          />
-        ))}
+  const { data: trips, isLoading, isError } = useTripsControllerFindAll();
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen pt-20">
+        <Loader2 className="h-8 w-8 animate-spin text-[var(--BRAND-500)]" />
       </div>
-      <RightSideSection />
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex justify-center items-center h-screen pt-20 text-red-500">
+        Une erreur est survenue lors du chargement des trajets.
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-screen flex flex-1 flex-col items-center gap-y-2 px-4">
+      <TripsBanner />
+      <div
+        className="overflow-y-auto overflow-x-hidden scrollbar-custom 
+          flex flex-1 w-full justify-center items-center flex-col md:grid md:grid-cols-2
+       gap-2 px-20 pb-2"
+      >
+        {trips?.map((trip: any, index: number) => (
+          <div key={trip.id || index} className="flex-1">
+            <TripSquareCard
+              tripId={trip.id}
+              from={trip.from}
+              to={trip.to}
+              date={
+                trip.startDate
+                  ? new Date(trip.startDate).toISOString()
+                  : new Date().toISOString()
+              } // formatted as string if Card expects string
+              time={trip.time}
+              description={trip.tripDescription}
+              seatsConfirmed={trip.seatsConfirmed}
+              seatsAvailable={trip.seatsAvailable}
+              excales={trip.escales?.join(", ") || "Aucune escale"}
+              ownerFullName={trip?.driverName || "Inconnu"} // mapping nested object
+              ownerAvatarUrl={trip.owner?.avatarUrl}
+              createdAt={
+                trip.createdAt
+                  ? new Date(trip.createdAt).toISOString()
+                  : new Date().toISOString()
+              }
+              associatedEventName={trip.associatedEventTitle}
+              status={trip.status || "PLANIFIED"}
+              price={trip.price}
+              hasApplied={trip.hasApplied}
+              vehicleBrand={trip.vehicle.brand}
+              vehicleModel={trip.vehicle.model}
+              vehiclePlateNumber={trip.vehicle.plateNumber}
+              vehicleImageUrl={trip.vehicle.imageUrl}
+            />
+          </div>
+        ))}
+        {(!trips || trips.length === 0) && (
+          <div className="text-gray-500 mt-10">
+            Aucun trajet disponible pour le moment.
+          </div>
+        )}
+      </div>
     </div>
   );
 }

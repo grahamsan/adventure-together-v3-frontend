@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import {
   Form,
   FormField,
@@ -309,7 +309,7 @@ export default function RegisterForm() {
       onError: (error: any) => {
         toast.error(
           error?.response?.data?.message ||
-            "Une erreur est survenue lors de l'inscription"
+            "Une erreur est survenue lors de l'inscription",
         );
       },
     });
@@ -507,7 +507,7 @@ export default function RegisterForm() {
                                     variant={"outline"}
                                     className={cn(
                                       "w-full pl-3 text-left font-normal",
-                                      !field.value && "text-muted-foreground"
+                                      !field.value && "text-muted-foreground",
                                     )}
                                   >
                                     {field.value &&
@@ -534,7 +534,7 @@ export default function RegisterForm() {
                                   }
                                   onSelect={(date) =>
                                     field.onChange(
-                                      date ? format(date, "yyyy-MM-dd") : ""
+                                      date ? format(date, "yyyy-MM-dd") : "",
                                     )
                                   }
                                   disabled={(date) =>
@@ -766,7 +766,7 @@ export default function RegisterForm() {
                                     variant={"outline"}
                                     className={cn(
                                       "w-full pl-3 text-left font-normal",
-                                      !field.value && "text-muted-foreground"
+                                      !field.value && "text-muted-foreground",
                                     )}
                                   >
                                     {field.value &&
@@ -793,7 +793,7 @@ export default function RegisterForm() {
                                   }
                                   onSelect={(date) =>
                                     field.onChange(
-                                      date ? format(date, "yyyy-MM-dd") : ""
+                                      date ? format(date, "yyyy-MM-dd") : "",
                                     )
                                   }
                                   disabled={(date) =>
@@ -905,7 +905,7 @@ export default function RegisterForm() {
                                     variant={"outline"}
                                     className={cn(
                                       "w-full pl-3 text-left font-normal",
-                                      !field.value && "text-muted-foreground"
+                                      !field.value && "text-muted-foreground",
                                     )}
                                   >
                                     {field.value &&
@@ -932,7 +932,7 @@ export default function RegisterForm() {
                                   }
                                   onSelect={(date) =>
                                     field.onChange(
-                                      date ? format(date, "yyyy-MM-dd") : ""
+                                      date ? format(date, "yyyy-MM-dd") : "",
                                     )
                                   }
                                   disabled={(date) =>
@@ -1072,22 +1072,25 @@ export default function RegisterForm() {
                     </FormItem>
                   )}
                 />
-
-                <div className="flex gap-4 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleBack}
-                    className="flex-1"
-                  >
-                    Retour
-                  </Button>
-                  <Button type="submit" className="flex-1">
-                    Créer le compte
-                  </Button>
-                </div>
               </form>
             </Form>
+
+            <div className="flex justify-between mt-8">
+              <Button type="button" variant="outline" onClick={handleBack}>
+                Retour
+              </Button>
+              <Button
+                type="button"
+                className="ml-auto"
+                onClick={form.handleSubmit(handleSubmit)}
+                disabled={registerMutation.isPending}
+              >
+                {registerMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                S'inscrire
+              </Button>
+            </div>
           </Card>
         </MotionWrapper>
       )}

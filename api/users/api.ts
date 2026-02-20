@@ -1,11 +1,13 @@
 // Auto-generated API functions
-import api from '@/lib/axios';
-import type { CreateUserDto, UpdateUserDto } from './types';
+import api from "@/lib/axios";
+import type { CreateUserDto, UpdateUserDto, User } from "./types";
 
 /**
  * Create a new user (Admin only)
  */
-export const userControllerCreate = async (payload: CreateUserDto): Promise<any> => {
+export const userControllerCreate = async (
+  payload: CreateUserDto,
+): Promise<any> => {
   const { data } = await api.post<any>(`/users`, payload);
   return data;
 };
@@ -21,8 +23,8 @@ export const userControllerFindAll = async (): Promise<any> => {
 /**
  * Get current user profile
  */
-export const userControllerGetMe = async (): Promise<any> => {
-  const { data } = await api.get<any>(`/users/me`);
+export const userControllerGetMe = async (): Promise<User> => {
+  const { data } = await api.get<User>(`/users/me`);
   return data;
 };
 
@@ -37,7 +39,10 @@ export const userControllerFindOne = async (id: string): Promise<any> => {
 /**
  * Update user
  */
-export const userControllerUpdate = async (id: string, payload: UpdateUserDto): Promise<any> => {
+export const userControllerUpdate = async (
+  id: string,
+  payload: UpdateUserDto,
+): Promise<any> => {
   const { data } = await api.put<any>(`/users/${id}`, payload);
   return data;
 };
@@ -49,4 +54,3 @@ export const userControllerRemove = async (id: string): Promise<any> => {
   const { data } = await api.delete<any>(`/users/${id}`);
   return data;
 };
-

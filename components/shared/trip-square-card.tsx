@@ -1,12 +1,10 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+"use client";
 import {
   InfoIcon,
-  Heart,
   MapPin,
   Calendar,
   Calendar1,
   Clock,
-  Users,
   Waypoints,
   Wallet,
   MoreVertical,
@@ -14,6 +12,8 @@ import {
   EyeOff,
   LinkIcon,
   Share,
+  UserLock,
+  UserSearch,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./trip-status-badge";
@@ -24,6 +24,10 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import ApplyToTripForm from "../users-side/forms/apply-to-trip-form";
+import { formatTimestamp } from "@/utils/format-timestamp";
+import UserAvatarComponent from "./user-avatar-component";
+import TripsDetails from "./drawers/trips-details";
+import { useState } from "react";
 
 export interface TripSquareCardProps {
   from: string;
@@ -33,13 +37,19 @@ export interface TripSquareCardProps {
   description: string;
   seatsConfirmed: number;
   seatsAvailable: number;
-  excales: number;
+  excales: string[];
   ownerFullName: string;
   ownerAvatarUrl: string;
   createdAt: string;
   associatedEventName: string;
   status: "ouvert" | "complet" | "terminé";
   price: number;
+  tripId: string;
+  hasApplied: boolean;
+  vehicleBrand: string;
+  vehicleModel: string;
+  vehiclePlateNumber: string;
+  vehicleImageUrl: string;
 }
 
 export default function TripSquareCard({
@@ -57,9 +67,16 @@ export default function TripSquareCard({
   associatedEventName,
   status,
   price,
+  tripId,
+  hasApplied,
+  vehicleBrand,
+  vehicleModel,
+  vehiclePlateNumber,
+  vehicleImageUrl,
 }: TripSquareCardProps) {
+  const [openDetails, setOpenDetails] = useState(false);
   return (
-    <div className="flex w-full gap-6 p-4 rounded-xl border-[0.5px] border-gray-200 bg-white relative">
+    <div className="flex w-full lg:flex-1 gap-6 p-4 rounded-xl border-[0.5px] border-gray-200 bg-white relative">
       {/* Dropdown actions */}
       <div className="absolute top-3 right-3">
         <DropdownMenu>
@@ -73,8 +90,8 @@ export default function TripSquareCard({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem>
-              <EyeOff className="w-4 h-4 mr-2 text-gray-600 whitespace-nowrap" /> Je ne veux pas
-              voir ça
+              <EyeOff className="w-4 h-4 mr-2 text-gray-600 whitespace-nowrap" />{" "}
+              Je ne veux pas voir ça
             </DropdownMenuItem>
 
             <DropdownMenuItem>
@@ -99,15 +116,16 @@ export default function TripSquareCard({
           loading="lazy"
         />
         <div className="flex items-center gap-3 mt-4">
-          <Avatar className="w-10 h-10">
-            <AvatarImage src={ownerAvatarUrl} />
-            <AvatarFallback>NG</AvatarFallback>
-          </Avatar>
+          <UserAvatarComponent
+            fullname={ownerFullName}
+            avatar={ownerAvatarUrl}
+            size={40}
+          />
           <div>
             <p className="font-semibold text-sm text-gray-900 flex items-center gap-1">
               {ownerFullName}
             </p>
-            <p className="text-xs text-gray-500">{createdAt}</p>
+            {/* <p className="text-xs text-gray-500">{createdAt}</p> */}
           </div>
         </div>
       </div>
@@ -119,7 +137,8 @@ export default function TripSquareCard({
           </div>
 
           <div className="flex items-center gap-2 text-sm text-gray-700">
-            <Calendar1 className="w-4 h-4 text-gray-700" /> {date}
+            <Calendar1 className="w-4 h-4 text-gray-700" />{" "}
+            {formatTimestamp(date)}
           </div>
 
           <div className="flex items-center gap-2 text-sm text-gray-700">
@@ -127,23 +146,15 @@ export default function TripSquareCard({
           </div>
 
           <div className="flex items-center gap-2 text-sm text-gray-700">
-            <Users className="w-4 h-4 text-gray-700" /> Sièges confirmés :
-            <strong>
-              {seatsConfirmed}/{seatsAvailable}
-            </strong>
+            <UserLock className="w-4 h-4 text-gray-700" /> Sièges confirmés :
+            <strong>{seatsConfirmed}</strong>
           </div>
-
           <div className="flex items-center gap-2 text-sm text-gray-700">
-            <Waypoints className="w-4 h-4 text-gray-700" /> Escales :
-            <strong>{excales}</strong>
-          </div>
-
-          <div className="w-fit flex items-center gap-2 text-sm text-blue-500 font-bold bg-blue-50 rounded-lg px-2 py-1">
-            <Calendar className="w-4 h-4 text-blue-500" /> {associatedEventName}
+            <UserSearch className="w-4 h-4 text-gray-700" /> Sièges restants :
+            <strong>{seatsAvailable}</strong>
           </div>
 
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <StatusBadge status={status} />
             <div className="flex items-center gap-2 text-sm text-orange-500 bg-orange-50 rounded-lg px-2 py-1">
               <Wallet className="w-4 h-4 text-orange-500" /> {price} FCFA /
               place
@@ -153,20 +164,43 @@ export default function TripSquareCard({
 
         <div className="flex gap-3 mt-4">
           <Button
-            variant="ghost"
-            className="w-10 h-10 rounded-full bg-pink-50 hover:bg-pink-100"
+            onClick={() => setOpenDetails(true)}
+            variant="outline"
+            className="mt-1 text-brand-500 flex items-center gap-2 flex-1 rounded-full bg-white hover:bg-brand-400 hover:text-white"
           >
-            <Heart className="w-5 h-5 text-pink-500" />
+            <InfoIcon className="w-5 h-5 " />
+            <span className="font-semibold">Voir les détails</span>
           </Button>
 
-          <Button
-            variant="ghost"
-            className="w-10 h-10 rounded-full bg-blue-50 hover:bg-blue-100"
-          >
-            <InfoIcon className="w-5 h-5 text-blue-500" />
-          </Button>
-
-          <ApplyToTripForm />
+          <ApplyToTripForm
+            tripId={tripId}
+            hasApplied={hasApplied}
+            seatsAvailable={seatsAvailable}
+          />
+          <TripsDetails
+            open={openDetails}
+            onOpenChange={setOpenDetails}
+            from={from}
+            to={to}
+            date={date}
+            time={time}
+            description={description}
+            seatsConfirmed={seatsConfirmed}
+            seatsAvailable={seatsAvailable}
+            excales={excales}
+            ownerFullName={ownerFullName}
+            ownerAvatarUrl={ownerAvatarUrl}
+            createdAt={createdAt}
+            associatedEventName={associatedEventName}
+            status={status}
+            price={price}
+            tripId={tripId}
+            hasApplied={hasApplied}
+            vehicleBrand={vehicleBrand}
+            vehicleModel={vehicleModel}
+            vehiclePlateNumber={vehiclePlateNumber}
+            vehicleImageUrl={vehicleImageUrl}
+          />
         </div>
       </div>
     </div>

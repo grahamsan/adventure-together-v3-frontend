@@ -4,12 +4,13 @@ import TripSquareCard from "../shared/trip-square-card";
 import { mockedTrips } from "@/utils/mock-trips";
 
 export default function TripsPage() {
-    return (
-        <div>
-            <FieldContainer isTripList={true}>
+  return (
+    <div>
+      {/* <FieldContainer isTripList={true}>
                 {mockedTrips.map((trip, index) => (
                     <TripSquareCard
                         key={index}
+                        tripId={trip.id}
                         from={trip.from}
                         to={trip.to}
                         date={trip.date}
@@ -26,7 +27,7 @@ export default function TripsPage() {
                         price={trip.price}
                     />
                 ))}
-            </FieldContainer>
-        </div>
-    );
+            </FieldContainer> */}
+    </div>
+  );
 }

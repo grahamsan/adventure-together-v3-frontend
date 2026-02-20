@@ -8,7 +8,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, GripVertical, Calendar1 } from "lucide-react";
+import { Plus, GripVertical, Calendar1, Loader2 } from "lucide-react";
+import { useTripsControllerCreate } from "@/api/trips/hooks";
+import { useExperiencesControllerFindAll } from "@/api/experiences/hooks";
+import { useVehiclesControllerFindAll } from "@/api/vehicles/hooks";
+import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,7 +31,7 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { SearchableSelect } from "@/components/shared/searchable-select";
 import { useState } from "react";
 import { format } from "date-fns";
 import {
@@ -44,38 +48,23 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
+// Updated Schema to match new API payload
 const tripSchema = z.object({
-  from: z.string().min(2),
-  to: z.string().min(2),
+  from: z.string().min(2, "Le lieu de départ est requis"),
+  to: z.string().min(2, "La destination est requise"),
   startDate: z.date(),
-  startHour: z.string(),
-  associatedEventTitle: z.string().min(2),
-  escales: z.array(z.string().min(1)),
-  associatedVehicle: z.string().min(1),
-  tripDescription: z.string().min(2),
-  price: z.number().min(1),
-  meetingPoint: z.object({
-    latitude: z.number(),
-    longitude: z.number(),
-    description: z.string().min(2),
-  }),
+  startHour: z.string().min(1, "L'heure de départ est requise"),
+  tripDescription: z.string().min(2, "La description est requise"),
+  price: z.coerce.number().min(1, "Le prix est requis"),
+  seatsAvailable: z.coerce.number().min(1, "Le nombre de places est requis"),
+  experienceId: z.string().min(1, "Veuillez sélectionner une expérience"),
+  placeId: z.string().optional(),
+  escales: z.array(z.string()),
+  associatedVehicle: z.string().min(1, "Veuillez sélectionner un véhicule"),
 });
 
 type TripFormValues = z.infer<typeof tripSchema>;
-
-const mockVehicles = [
-  { id: "veh1", name: "Toyota Prius", seats: 4 },
-  { id: "veh2", name: "Ford Transit", seats: 8 },
-  { id: "veh3", name: "Renault Kangoo", seats: 5 },
-];
 
 // --- Sortable Escale Card ---
 function SortableEscaleCard({ id, value }: { id: string; value: string }) {
@@ -102,27 +91,52 @@ function SortableEscaleCard({ id, value }: { id: string; value: string }) {
     </div>
   );
 }
+
 export interface CreateTripFormProps {
   open?: boolean;
   onClose?: () => void;
 }
+
 export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
   const [step, setStep] = useState(1);
   const [escales, setEscales] = useState<string[]>([]);
   const [escaleInput, setEscaleInput] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Hooks for fetching options
+  const { data: experiencesData } = useExperiencesControllerFindAll();
+  const { data: vehiclesData } = useVehiclesControllerFindAll();
+
+  // Map to SearchableSelect items
+  const experienceOptions =
+    experiencesData?.data?.map((exp: any) => ({
+      value: exp.id,
+      label: exp.title,
+      searchKey: exp.title,
+    })) || [];
+
+  const vehicleOptions =
+    vehiclesData?.map((veh: any) => ({
+      value: veh.id,
+      label: `${veh.brand} ${veh.model} (${veh.seats} places)`,
+      searchKey: `${veh.brand} ${veh.model}`,
+    })) || [];
+
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   const form = useForm<TripFormValues>({
-    resolver: zodResolver(tripSchema),
+    resolver: zodResolver(tripSchema) as any,
     defaultValues: {
       from: "",
       to: "",
       startDate: new Date(),
       startHour: "",
-      associatedEventTitle: "",
-      escales: [],
-      associatedVehicle: "",
       tripDescription: "",
       price: 0,
-      meetingPoint: { latitude: 0, longitude: 0, description: "" },
+      seatsAvailable: 1,
+      experienceId: "",
+      placeId: "",
+      associatedVehicle: "",
+      escales: [],
     },
   });
 
@@ -145,20 +159,48 @@ export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
     }
   };
 
-  const onSubmit = async (values: TripFormValues) => {
-    const payload = { ...values, escales };
-    console.log("Ready for API:", payload);
-    alert("Form submitted! Voir console pour les données.");
-    // await fetch("/api/trips", { method: "POST", body: JSON.stringify(payload) });
-  };
+  const createTripMutation = useTripsControllerCreate();
 
-  const [isOpen, setIsOpen] = useState(false);
+  const onSubmit = async (values: TripFormValues) => {
+    const payload = {
+      from: values.from,
+      to: values.to,
+      startDate: format(values.startDate, "yyyy-MM-dd"), // Format as YYYY-MM-DD
+      startHour: values.startHour,
+      tripDescription: values.tripDescription,
+      price: Number(values.price),
+      seatsAvailable: Number(values.seatsAvailable),
+      experienceId: values.experienceId,
+      placeId: values.placeId || undefined, // Optional
+      escales: escales,
+      associatedVehicle: values.associatedVehicle,
+    };
+
+    createTripMutation.mutate(payload as any, {
+      onSuccess: () => {
+        toast.success("Trajet créé avec succès !");
+        setIsOpen(false);
+        if (onClose) onClose();
+        form.reset();
+        setEscales([]);
+        setStep(1);
+      },
+      onError: (error: any) => {
+        console.error("Error creating trip:", error);
+        toast.error("Erreur lors de la création du trajet.");
+      },
+    });
+  };
 
   return (
     <Dialog
       open={open !== undefined ? open : isOpen}
       onOpenChange={(isOpenNew) => {
-        if (!isOpenNew) form.reset();
+        if (!isOpenNew) {
+          form.reset();
+          setEscales([]);
+          setStep(1);
+        }
         if (onClose && !isOpenNew) onClose();
         setIsOpen(isOpenNew);
       }}
@@ -177,7 +219,7 @@ export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
             onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-6 mt-4"
           >
-            {/* --- STEP 1: From/To --- */}
+            {/* --- STEP 1: Basic Info --- */}
             {step === 1 && (
               <>
                 <FormField
@@ -202,6 +244,41 @@ export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
                     </FormItem>
                   )}
                 />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Prix (FCFA)</FormLabel>
+                        <Input
+                          {...field}
+                          type="number"
+                          min={0}
+                          placeholder="5000"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="seatsAvailable"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Places disponibles</FormLabel>
+                        <Input
+                          {...field}
+                          type="number"
+                          min={1}
+                          placeholder="4"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <div className="flex justify-end">
                   <Button type="button" onClick={() => setStep(2)}>
                     Suivant
@@ -210,79 +287,65 @@ export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
               </>
             )}
 
+            {/* --- STEP 2: Date & Associations --- */}
             {step === 2 && (
               <>
-                <FormField
-                  control={form.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date de départ</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <div
-                            className="flex gap-x-2 items-center font-semibold w-full justify-start text-left bg-stone-100 text-stone-500 p-2 rounded-lg cursor-pointer"
-                          >
-                            <Calendar1 className="h-4 w-4" />
-                            {field.value
-                              ? format(field.value, "PPP")
-                              : "Sélectionner une date"}
-                          </div>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="startHour"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Heure de départ</FormLabel>
-                      <Input {...field} type="time" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="associatedEventTitle"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Événement associé</FormLabel>
-                      <Input {...field} />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="tripDescription"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description du trajet</FormLabel>
-                      <Textarea {...field} placeholder="Décrivez le trajet" />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Date de départ</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <div className="flex gap-x-2 items-center font-semibold w-full justify-start text-left bg-stone-100 text-stone-500 p-2 rounded-lg cursor-pointer">
+                              <Calendar1 className="h-4 w-4" />
+                              {field.value
+                                ? format(field.value, "PPP")
+                                : "Sélectionner une date"}
+                            </div>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) => date < new Date()}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="startHour"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Heure de départ</FormLabel>
+                        <Input {...field} type="time" />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <FormField
                   control={form.control}
-                  name="price"
+                  name="experienceId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Prix par place (FCFA)</FormLabel>
-                      <Input
-                        {...field}
-                        type="number"
-                        min={0}
-                        placeholder="Ex: 5000"
+                      <FormLabel>Expérience associée</FormLabel>
+                      <SearchableSelect
+                        items={experienceOptions}
+                        placeholder="Rechercher une expérience..."
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={false}
                       />
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -293,24 +356,38 @@ export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Véhicule</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
+                      <SearchableSelect
+                        items={vehicleOptions}
+                        placeholder="Rechercher un véhicule..."
                         value={field.value}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Sélectionner un véhicule" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {mockVehicles.map((v) => (
-                            <SelectItem key={v.id} value={v.name}>
-                              {v.name} ({v.seats} places)
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        onValueChange={field.onChange}
+                        disabled={false}
+                      />
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {/* Optional Place ID - Keeping it simple or hidden? User said "place est optionnel". 
+                    Adding input just in case user wants to manually enter, or could be removed if unneeded.
+                    I'll add it as an optional advanced field or just leave it. 
+                    Given the prompt "retirer les champs qui n'ont rien à voir" and "place est optionnel", 
+                    I'll include it for completeness of payload but maybe at the bottom or if needed.
+                */}
+                {/* 
+                <FormField
+                  control={form.control}
+                  name="placeId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lieu (ID Optionnel)</FormLabel>
+                      <Input {...field} placeholder="Identifiant du lieu" />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                /> 
+                */}
+
                 <div className="flex justify-between mt-4">
                   <Button
                     type="button"
@@ -326,8 +403,24 @@ export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
               </>
             )}
 
+            {/* --- STEP 3: Description & Escales --- */}
             {step === 3 && (
               <>
+                <FormField
+                  control={form.control}
+                  name="tripDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description du trajet</FormLabel>
+                      <Textarea
+                        {...field}
+                        placeholder="Décrivez le trajet..."
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <div className="mb-2">
                   <FormLabel>Escales prévues</FormLabel>
                   <div className="flex gap-2 mt-2">
@@ -345,7 +438,7 @@ export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
                   </div>
                 </div>
 
-                <div className="h-64 overflow-y-auto mt-3 border rounded-md p-2 scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-200">
+                <div className="h-48 overflow-y-auto mt-3 border rounded-md p-2 scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-200">
                   <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
@@ -373,7 +466,12 @@ export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
                   >
                     Retour
                   </Button>
-                  <Button type="submit">Créer le trajet</Button>
+                  <Button type="submit" disabled={createTripMutation.isPending}>
+                    {createTripMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Créer le trajet
+                  </Button>
                 </div>
               </>
             )}

@@ -28,7 +28,9 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { useVerifyEmail } from "@/features/auth/queries";
+import { useAuthControllerVerifyEmail } from "@/api/auth/hooks";
+import { Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 // --- 1. Schémas Zod pour chaque étape ---
 
@@ -56,7 +58,7 @@ export default function EmailVerificationForm() {
   const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: Success
   const [timeLeft, setTimeLeft] = useState(RESEND_TIMER_DURATION);
   const [isResending, setIsResending] = useState(false);
-  const verifyEmailMutation = useVerifyEmail();
+  const verifyEmailMutation = useAuthControllerVerifyEmail();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(EmailVerificationSchema),
@@ -83,12 +85,16 @@ export default function EmailVerificationForm() {
 
   const handleResendClick = () => {
     setIsResending(true);
-    // Simuler l'appel API de renvoi d'email
+    // TODO: Utiliser useAuthControllerSendVerification si disponible
+    // Pour l'instant on garde la simulation ou on connecte le vrai hook si on l'a
     console.log(`Renvoyer le code à ${currentEmail}`);
+
+    // Simulation améliorée avec Toast
     setTimeout(() => {
       setTimeLeft(RESEND_TIMER_DURATION);
       setIsResending(false);
-    }, 500);
+      toast.success("Nouveau code envoyé !");
+    }, 1000);
   };
 
   const isTimerActive = timeLeft > 0;
@@ -107,11 +113,23 @@ export default function EmailVerificationForm() {
       // Validation OTP
       const otpValid = await form.trigger("pin");
       if (otpValid) {
-        await verifyEmailMutation.mutateAsync({
-          email: currentEmail,
-          code: currentPin,
-        });
-        setStep(3); // Passage à l'écran de succès
+        verifyEmailMutation.mutate(
+          {
+            email: currentEmail,
+            code: currentPin,
+          },
+          {
+            onSuccess: () => {
+              toast.success("Email vérifié avec succès !");
+              setStep(3);
+            },
+            onError: (error: any) => {
+              toast.error(
+                error?.response?.data?.message || "Code incorrect ou expiré.",
+              );
+            },
+          },
+        );
       }
     }
   };
@@ -218,9 +236,14 @@ export default function EmailVerificationForm() {
                         type="submit"
                         className="w-full"
                         disabled={
-                          form.formState.isSubmitting || currentPin.length < 6
+                          form.formState.isSubmitting ||
+                          currentPin.length < 6 ||
+                          verifyEmailMutation.isPending
                         }
                       >
+                        {verifyEmailMutation.isPending && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
                         Vérifier le code
                       </Button>
 

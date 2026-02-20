@@ -12,6 +12,7 @@ export const queryKeys = {
   },
   // Users
   users: {
+    me: ["users", "me"] as const,
     all: ["users"] as const,
     lists: () => [...queryKeys.users.all, "list"] as const,
     list: (filters?: any) => [...queryKeys.users.lists(), filters] as const,
@@ -38,7 +39,8 @@ export const queryKeys = {
   experiences: {
     all: ["experiences"] as const,
     lists: () => [...queryKeys.experiences.all, "list"] as const,
-    list: (filters?: any) => [...queryKeys.experiences.lists(), filters] as const,
+    list: (filters?: any) =>
+      [...queryKeys.experiences.lists(), filters] as const,
     details: () => [...queryKeys.experiences.all, "detail"] as const,
     detail: (id: string) => [...queryKeys.experiences.details(), id] as const,
   },
@@ -54,9 +56,13 @@ export const queryKeys = {
   conversations: {
     all: ["conversations"] as const,
     lists: () => [...queryKeys.conversations.all, "list"] as const,
-    list: (filters?: any) => [...queryKeys.conversations.lists(), filters] as const,
+    list: (filters?: any) =>
+      [...queryKeys.conversations.lists(), filters] as const,
     details: () => [...queryKeys.conversations.all, "detail"] as const,
     detail: (id: string) => [...queryKeys.conversations.details(), id] as const,
+    messages: () => [...queryKeys.conversations.all, "messages"] as const,
+    message: (chatId: string) =>
+      [...queryKeys.conversations.messages(), chatId] as const,
   },
   // Admin
   admin: {
@@ -94,9 +100,11 @@ export const queryKeys = {
   userStatistics: {
     all: ["userStatistics"] as const,
     lists: () => [...queryKeys.userStatistics.all, "list"] as const,
-    list: (filters?: any) => [...queryKeys.userStatistics.lists(), filters] as const,
+    list: (filters?: any) =>
+      [...queryKeys.userStatistics.lists(), filters] as const,
     details: () => [...queryKeys.userStatistics.all, "detail"] as const,
-    detail: (id: string) => [...queryKeys.userStatistics.details(), id] as const,
+    detail: (id: string) =>
+      [...queryKeys.userStatistics.details(), id] as const,
   },
   // Comments
   comments: {

@@ -7,18 +7,26 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   ThumbsUp,
   ThumbsDown,
-  Send,
   Reply,
   Flag,
   X,
   MoreVertical,
   Trash2,
+  SendHorizonal,
+  MessagesSquare,
+  Puzzle,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -36,6 +44,7 @@ import {
   useCommentsControllerRemove,
 } from "@/api/comments/hooks";
 import type { Comment } from "@/api/comments/types";
+import UserAvatarComponent from "../user-avatar-component";
 
 interface EventDetailsDrawerProps {
   experienceId: string;
@@ -84,23 +93,21 @@ function CommentItem({
   return (
     <div className={`${isReply ? "ml-12" : ""}`}>
       <div className="flex gap-3 group">
-        <Avatar className="size-9 flex-shrink-0">
-          <AvatarImage src={comment.user.avatarUrl || undefined} />
-          <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-500 text-white">
-            {authorName.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-
-        <div className="flex-1 min-w-0">
-          <div className="bg-gray-50 rounded-2xl px-4 py-2.5">
+        <UserAvatarComponent
+          fullname={authorName}
+          avatar={comment.user.avatarUrl}
+          size={40}
+        />
+        <div className="w-fit">
+          <div className="bg-second-50 rounded-[8px] px-4 py-2.5">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex flex-col">
+              <div className="flex gap-x-2 items-center">
                 <p className="font-semibold text-sm text-gray-900">
                   {authorName}
                 </p>
                 {comment.user.role === "Organizer" && (
-                  <span className="text-xs text-blue-600 font-medium">
-                    Organisateur
+                  <span className="rounded-[8px] bg-second-50 h-6 w-6 flex items-center justify-center font-medium">
+                    <Puzzle className="h-4 w-4 text-second-500" />
                   </span>
                 )}
               </div>
@@ -160,7 +167,7 @@ function CommentItem({
             {!isReply && (
               <button
                 onClick={() => onReply(comment.id, authorName)}
-                className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-blue-600 transition-colors"
+                className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-second-500 cursor-pointer transition-colors"
               >
                 <Reply className="h-3.5 w-3.5" />
                 <span className="font-medium">Répondre</span>
@@ -201,7 +208,7 @@ function CommentItem({
   );
 }
 
-export default function EventDetailsDrawer({
+export default function EventDetailsSheet({
   experienceId,
   eventTitle,
   open,
@@ -282,13 +289,16 @@ export default function EventDetailsDrawer({
   };
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="h-[85vh] flex flex-col">
-        <DrawerHeader className="border-b px-6 py-4">
-          <DrawerTitle className="text-lg font-semibold">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="h-[98vh] w-[30vw] my-auto mr-4 flex flex-col rounded-[12px] [&>button]:hidden">
+        <SheetHeader className="border-b px-6 py-4">
+          <SheetTitle className="text-lg font-semibold flex items-center gap-2 text-second-500">
+            <span className="flex items-center h-10 w-10 bg-brand-50 text-brand-500 p-2 rounded-[10px]">
+              <MessagesSquare className="h-5 w-5 " />
+            </span>
             Commentaires - {eventTitle}
-          </DrawerTitle>
-        </DrawerHeader>
+          </SheetTitle>
+        </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {isLoading ? (
@@ -326,7 +336,7 @@ export default function EventDetailsDrawer({
           )}
         </div>
 
-        <div className="border-t px-6 py-4 bg-white">
+        <div className="border-t px-6 py-4 bg-white rounded-b-[24px]">
           {replyTo && (
             <div className="mb-3 flex items-center gap-2 text-sm text-gray-600 bg-blue-50 rounded-lg px-3 py-2">
               <Reply className="h-4 w-4" />
@@ -343,35 +353,31 @@ export default function EventDetailsDrawer({
             </div>
           )}
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center rounded-b-[12px]">
             <Textarea
               placeholder="Écrire un commentaire..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              className="min-h-[44px] max-h-32 resize-none rounded-2xl"
+              className="min-h-8 max-h-11 resize-none rounded-[8px]"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   handleSubmitComment();
                 }
               }}
+              autoFocus
             />
             <Button
               onClick={handleSubmitComment}
               disabled={!newComment.trim() || createComment.isPending}
-              className="h-11 w-11 rounded-full flex-shrink-0 bg-blue-600 hover:bg-blue-700"
+              className="h-11 w-11 rounded-[8px] flex-shrink-0 bg-brand-600 hover:bg-brand-700"
               size="icon"
             >
-              <Send className="h-4 w-4" />
+              <SendHorizonal className="h-4 w-4" />
             </Button>
           </div>
-
-          <p className="text-xs text-gray-400 mt-2 ml-1">
-            Appuyez sur Entrée pour envoyer, Shift + Entrée pour un saut de
-            ligne
-          </p>
         </div>
-      </DrawerContent>
-    </Drawer>
+      </SheetContent>
+    </Sheet>
   );
 }

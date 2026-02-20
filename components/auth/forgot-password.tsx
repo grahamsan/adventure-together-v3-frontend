@@ -5,7 +5,9 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import {
   Form,
   FormField,
@@ -28,7 +30,10 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { useForgotPassword, useResetPassword } from "@/features/auth/queries";
+import {
+  useAuthControllerRequestReset,
+  useAuthControllerResetPassword,
+} from "@/api/auth/hooks";
 
 // --- 1. Schémas Zod pour chaque étape ---
 
@@ -43,19 +48,28 @@ const OTPSchema = z.object({
 });
 
 // Étape 3: Nouveau Mot de Passe
-const PasswordSchema = z
-  .object({
-    password: z.string().min(8, "Minimum 8 caractères requis"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Les mots de passe ne correspondent pas.",
-    path: ["confirmPassword"], // Afficher l'erreur sur ce champ
-  });
+const PasswordBase = z.object({
+  password: z.string().min(8, "Minimum 8 caractères requis"),
+  confirmPassword: z.string(),
+});
 
 // Types combinés
-const ForgotPasswordSchema = EmailSchema.merge(OTPSchema.partial()) // OTP est optionnel au début
-  .merge(PasswordSchema.partial()); // Password est optionnel au début
+const ForgotPasswordSchema = EmailSchema.merge(OTPSchema.partial())
+  .merge(PasswordBase.partial())
+  .superRefine((data, ctx) => {
+    // Si les champs mot de passe sont remplis (étape 3), on valide la correspondance
+    if (
+      data.password &&
+      data.confirmPassword &&
+      data.password !== data.confirmPassword
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Les mots de passe ne correspondent pas.",
+        path: ["confirmPassword"],
+      });
+    }
+  });
 
 type FormValues = z.infer<typeof ForgotPasswordSchema>;
 
@@ -72,12 +86,13 @@ const stepVariants = {
 // --- 3. Composant Principal ---
 
 export default function ForgotPasswordFormAnimated() {
+  const router = useRouter(); // Use App Router
   const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: New Password
   const [showPassword, setShowPassword] = useState(false);
   const [timeLeft, setTimeLeft] = useState(RESEND_TIMER_DURATION);
   const [isResending, setIsResending] = useState(false);
-  const forgotPasswordMutation = useForgotPassword();
-  const resetPasswordMutation = useResetPassword();
+  const forgotPasswordMutation = useAuthControllerRequestReset();
+  const resetPasswordMutation = useAuthControllerResetPassword();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(ForgotPasswordSchema),
@@ -109,11 +124,19 @@ export default function ForgotPasswordFormAnimated() {
     forgotPasswordMutation.mutate(
       { email: currentEmail },
       {
-        onSettled: () => {
+        onSuccess: () => {
+          toast.success("Code renvoyé avec succès !");
           setTimeLeft(RESEND_TIMER_DURATION);
           setIsResending(false);
         },
-      }
+        onError: (error: any) => {
+          // Basic error handling assuming error.message exists
+          toast.error(
+            error?.response?.data?.message || "Erreur lors de l'envoi du code.",
+          );
+          setIsResending(false);
+        },
+      },
     );
   };
 
@@ -121,34 +144,65 @@ export default function ForgotPasswordFormAnimated() {
 
   // --- Gestionnaire de Soumission par Étapes ---
   const handleNext = async () => {
-    const isValid = await form.trigger(); // Valide tous les champs du formulaire
-
-    if (!isValid) return;
+    // const isValid = await form.trigger(); // Ne pas valider tout le formulaire d'un coup car les étapes suivantes sont vides
+    // if (!isValid) return;
 
     if (step === 1) {
       // Validation Email (vérifier uniquement le champ email)
       const emailValid = await form.trigger("email");
       if (emailValid) {
-        await forgotPasswordMutation.mutateAsync({ email: currentEmail });
-        setStep(2); // Passage à l'étape OTP
+        forgotPasswordMutation.mutate(
+          { email: currentEmail },
+          {
+            onSuccess: () => {
+              toast.success("Code envoyé avec succès !");
+              setStep(2);
+            },
+            onError: (error: any) => {
+              toast.error(
+                error?.response?.data?.message ||
+                  "Erreur lors de l'envoi de l'email.",
+              );
+            },
+          },
+        );
       }
     } else if (step === 2) {
       // Validation OTP
       const otpValid = await form.trigger("pin");
       if (otpValid) {
         // Pas de vérification API intermédiaire pour le moment
+        // On pourrait ajouter une vérification ici si l'API le permettait
         setStep(3); // Passage à l'étape Nouveau Mot de Passe
       }
     } else if (step === 3) {
-      // Validation Finale du Mot de Passe
-      const finalValid = await form.trigger(["password", "confirmPassword"]);
+      // Validation Finale du Mot de Passe (on valide tout pour déclencher le superRefine)
+      const finalValid = await form.trigger();
       if (finalValid) {
         const values = form.getValues();
-        await resetPasswordMutation.mutateAsync({
-          email: values.email,
-          code: values.pin!,
-          newPassword: values.password!,
-        });
+        resetPasswordMutation.mutate(
+          {
+            email: values.email,
+            code: values.pin!,
+            newPassword: values.password!,
+          },
+          {
+            onSuccess: (data: any) => {
+              // Structure attendue: {"statusCode":201,"data":{"message":"Mot de passe réinitialisé avec succès"}}
+              const message =
+                data?.data?.message || "Mot de passe réinitialisé avec succès";
+              toast.success(message);
+              router.push("/login");
+            },
+            onError: (error: any) => {
+              toast.error(
+                error?.response?.data?.message ||
+                  error?.message ||
+                  "Erreur lors de la réinitialisation.",
+              );
+            },
+          },
+        );
       }
     }
   };
@@ -211,7 +265,14 @@ export default function ForgotPasswordFormAnimated() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full mt-6">
+                  <Button
+                    type="submit"
+                    className="w-full mt-6"
+                    disabled={forgotPasswordMutation.isPending}
+                  >
+                    {forgotPasswordMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
                     Envoyer le code de réinitialisation
                   </Button>
                 </motion.div>
@@ -271,10 +332,19 @@ export default function ForgotPasswordFormAnimated() {
                           variant="link"
                           type="button"
                           onClick={handleResendClick}
-                          disabled={isResending}
+                          disabled={
+                            isResending || forgotPasswordMutation.isPending
+                          }
                           className="p-0 h-auto text-sm"
                         >
-                          {isResending ? "Envoi..." : "Renvoyer le code"}
+                          {isResending || forgotPasswordMutation.isPending ? (
+                            <>
+                              <Loader2 className="mr-2 h-3 w-3 animate-spin" />{" "}
+                              Envoi...
+                            </>
+                          ) : (
+                            "Renvoyer le code"
+                          )}
                         </Button>
                       )}
                     </div>
@@ -342,7 +412,14 @@ export default function ForgotPasswordFormAnimated() {
                     )}
                   />
 
-                  <Button type="submit" className="w-full mt-6">
+                  <Button
+                    type="submit"
+                    className="w-full mt-6"
+                    disabled={resetPasswordMutation.isPending}
+                  >
+                    {resetPasswordMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
                     Réinitialiser le mot de passe
                   </Button>
                 </motion.div>

@@ -14,26 +14,20 @@ export default function VehiclePage() {
   const { data: vehicles, isLoading } = useVehiclesControllerFindAll();
 
   return (
-    <div className="flex w-full justify-between min-h-screen">
-      <LeftSideSection
-        userRole="admin"
-        userAvatar="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-        userFullName="John Doe"
-      />
-      <div className="relative flex flex-col max-w-[50vw] justify-center items-center  gap-y-4 pb-2">
-        <AddNewSection userFullName="John Doe" />
+    <div className="w-full flex flex-col items-center gap-y-2 pb-2 pt-20 max-w-5xl mx-auto px-4">
+      <AddNewSection userFullName="User" />
+      <div className="relative flex flex-col w-full max-w-md justify-center items-center gap-y-4 pb-2">
         <div className={`${openVehicleDialog ? "block" : "hidden"}`}>
           <CreateVehicleForm
             open={openVehicleDialog}
             onClose={() => setOpenVehicleDialog(false)}
           />
         </div>
-        {isLoading && <p>Loading...</p>}
+        {isLoading && <p>Chargement...</p>}
         {vehicles?.map((vehicle) => (
           <VehicleCard key={vehicle.id} vehicle={vehicle} />
         ))}
       </div>
-      <RightSideSection />
     </div>
   );
 }

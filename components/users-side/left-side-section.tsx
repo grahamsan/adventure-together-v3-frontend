@@ -4,6 +4,8 @@ import { ReactNode } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar, Compass, Map, Activity, Car } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
+import { useGetUserRole } from "@/api/app/hooks";
+import UserAvatarComponent from "../shared/user-avatar-component";
 
 interface NavigationItem {
   label: string;
@@ -54,15 +56,22 @@ interface SidebarProps {
 }
 
 export default function LeftSideSection({
-  userRole,
+  userRole, // Keeping props for backward compatibility or initial load if needed, but we'll prioritize the hook
   userAvatar,
   userFullName,
 }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { isDriver, isAdmin, role: hookRole } = useGetUserRole();
+
+  // Use role from hook if available, otherwise prop
+  const currentRole = hookRole || userRole;
 
   return (
-    <div className="bg-white sticky top-0 left-0 h-screen w-[20vw] max-w-[25vw] bg-transparent border-r border-gray-200 flex flex-col justify-between">
+    <div
+      className="mt-4 ml-4 bg-white sticky top-0 left-0 h-[95vh] w-[15vw] max-w-[25vw] bg-transparent 
+    border-r border-gray-200 flex flex-col justify-between rounded-[24px]"
+    >
       {/* Logo */}
       <div className="flex itzms-center w-full justify-center p-2">
         <img src="/at.png" alt="logo" className="w-52 h-20" />
@@ -71,12 +80,18 @@ export default function LeftSideSection({
       {/* Navigation */}
       <nav className="flex flex-col px-4 gap-1">
         {navigationItems
-          .filter((item) => userHasAccess(item, userRole))
+          .filter((item) => {
+            // Special check for Vehicles: only drivers
+            if (item.label === "Véhicules" && !isDriver) return false;
+
+            // General role check using the helper
+            return userHasAccess(item, currentRole);
+          })
           .map((item) => (
             <button
               key={item.label}
               onClick={() => router.push(item.path)}
-              className={`flex items-center gap-3 py-2 px-3 rounded-lg transition
+              className={` cursor-pointer flex items-center gap-3 py-2 px-3 rounded-lg transition
     ${
       pathname === item.path || pathname.startsWith(item.path)
         ? "bg-brand-500 text-white"
@@ -101,11 +116,11 @@ export default function LeftSideSection({
 
       {/* Profil */}
       <div className="p-4 border-t border-gray-200 flex items-center gap-3">
-        <Avatar className="w-10 h-10">
-          <AvatarImage src={userAvatar} />
-          <AvatarFallback>{userFullName?.[0] || "?"}</AvatarFallback>
-        </Avatar>
-
+        <UserAvatarComponent
+          fullname={userFullName}
+          avatar={userAvatar}
+          size={40}
+        />
         <div className="flex flex-col">
           <span className="text-sm font-semibold text-gray-900">
             {userFullName}
