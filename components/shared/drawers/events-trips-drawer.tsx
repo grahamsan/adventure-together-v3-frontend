@@ -47,8 +47,8 @@ export default function EventTripsDrawer({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="my-auto mr-4 flex h-[98vh] w-[40vw] flex-col rounded-[12px] [&>button]:hidden">
-          <SheetHeader className="space-y-0">
+        <SheetContent className="max-md:w-full max-md:max-w-full max-md:rounded-none max-md:mr-0 my-auto md:mr-4 flex max-md:h-full md:h-[98vh] md:w-[40vw] flex-col rounded-[12px] md:[&>button]:hidden">
+          <SheetHeader className="space-y-0 max-md:pr-14">
             <div className="flex items-start justify-between gap-3 pr-2">
               <SheetTitle className="text-second-500 flex flex-1 items-center gap-2 text-lg font-semibold">
                 <span className="bg-brand-50 text-brand-500 flex h-10 w-10 items-center rounded-[10px] p-2">

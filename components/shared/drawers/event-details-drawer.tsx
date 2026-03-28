@@ -283,8 +283,8 @@ export default function EventDetailsSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="h-[98vh] w-[30vw] my-auto mr-4 flex flex-col rounded-[12px] [&>button]:hidden">
-        <SheetHeader className="border-b px-6 py-4">
+      <SheetContent className="max-md:w-full max-md:max-w-full max-md:rounded-none max-md:mr-0 md:h-[98vh] md:w-[30vw] my-auto md:mr-4 flex flex-col rounded-[12px] md:[&>button]:hidden">
+        <SheetHeader className="border-b px-6 py-4 max-md:pr-14">
           <SheetTitle className="text-lg font-semibold flex items-center gap-2 text-second-500">
             <span className="flex items-center h-10 w-10 bg-brand-50 text-brand-500 p-2 rounded-[10px]">
               <MessagesSquare className="h-5 w-5 " />

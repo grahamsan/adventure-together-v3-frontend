@@ -5,21 +5,15 @@ import { useRouter, useParams } from "next/navigation";
 import { ChatSidebar } from "@/components/users-side/chat/chat-list";
 import { ChatView } from "@/components/users-side/chat/chat-component";
 import { fetchTrips } from "@/features/messages/api";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 export default function MessagePage() {
   const router = useRouter();
   const params = useParams();
   const chatId = params.id as string;
 
-  const [isMobile, setIsMobile] = useState(false);
+  const isMdUp = useMediaQuery("(min-width: 768px)");
   const [userName, setUserName] = useState("");
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   useEffect(() => {
     async function loadUserName() {
@@ -43,8 +37,8 @@ export default function MessagePage() {
     router.push("/messages");
   };
 
-  // Mobile: afficher seulement le chat
-  if (isMobile) {
+  // Mobile (sous md): afficher seulement le chat
+  if (!isMdUp) {
     return (
       <div className="flex-1 flex overflow-hidden">
         <ChatView chatId={chatId} userName={userName} onBack={handleBack} />

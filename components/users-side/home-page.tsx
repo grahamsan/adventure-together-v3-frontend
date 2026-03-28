@@ -22,7 +22,7 @@ export default function HomePage() {
     useExperiencesControllerFindAll(queryParams);
 
   return (
-    <div className="w-full h-screen flex flex-1 flex-col items-center gap-y-2 px-4">
+    <div className="w-full min-h-0 flex-1 flex flex-col items-center gap-y-2 px-3 sm:px-4 md:px-6">
       <EventsPageBanner
         periodFilter={periodFilter}
         onPeriodFilterChange={setPeriodFilter}
@@ -38,7 +38,7 @@ export default function HomePage() {
         <div
           className="overflow-y-auto overflow-x-hidden scrollbar-custom 
           flex flex-1 w-full justify-center items-center flex-col md:grid md:grid-cols-2
-       gap-2 px-20 pb-2"
+       gap-2 px-3 sm:px-6 md:px-12 lg:px-20 pb-2"
         >
           {experiencesResponse?.data.map((experience, index) => (
             <motion.div

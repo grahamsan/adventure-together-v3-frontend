@@ -5,6 +5,7 @@ import {
   useNotificationsControllerFindAll,
 } from "@/api/notifications/hooks";
 import LeftSideSection from "@/components/users-side/left-side-section";
+import { AppCoreMobileNav } from "@/components/users-side/app-core-mobile-nav";
 import { Button } from "@/components/ui/button";
 import { Bell, MessageCircle } from "lucide-react";
 import { ReactNode, useCallback, useState } from "react";
@@ -54,15 +55,26 @@ export default function LayoutContent({ children }: { children: ReactNode }) {
         />
       </div>
 
-      <main className="flex-1 w-full relative">
-        {children}
+      <main className="flex-1 w-full relative flex flex-col min-h-0">
+        <AppCoreMobileNav
+          userRole={userRole}
+          userAvatar={userAvatar}
+          userFullName={userFullName}
+        />
+        <div className="flex-1 min-h-0 overflow-auto flex flex-col">{children}</div>
 
         <NotificationSocketToast
           notifSocket={notifSocket}
           onShakeBell={triggerBellShake}
         />
 
-        <div className="fixed bottom-4 right-2 z-50 flex flex-col gap-2 items-end">
+        <div
+          className={cn(
+            "fixed z-50 flex flex-col gap-2 items-end",
+            "right-2 sm:right-3",
+            "bottom-4 max-md:bottom-[max(1rem,env(safe-area-inset-bottom,0px))]",
+          )}
+        >
           <div className="relative">
             <Button
               size="icon"
@@ -93,7 +105,7 @@ export default function LayoutContent({ children }: { children: ReactNode }) {
 
         <Sheet open={isNotifOpen} onOpenChange={setIsNotifOpen}>
           <SheetContent
-            className="p-0 w-full md:w-[50vw] lg:w-[40vw] h-[98vh] my-auto mr-4 rounded-[24px] flex flex-col min-h-0"
+            className="p-0 w-full md:w-[50vw] lg:w-[40vw] max-md:h-full max-md:min-h-0 max-md:rounded-none max-md:mr-0 h-[98vh] my-auto md:mr-4 md:rounded-[24px] flex flex-col min-h-0"
           >
             <NotificationList variant="sheet" />
           </SheetContent>
@@ -101,8 +113,7 @@ export default function LayoutContent({ children }: { children: ReactNode }) {
 
         <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}>
           <SheetContent
-            className="p-0  w-full 
-            md:w-[50vw] lg:w-[40vw] h-[98vh] my-auto mr-4 rounded-[24px] flex flex-col min-h-0"
+            className="p-0 w-full md:w-[50vw] lg:w-[40vw] max-md:h-full max-md:min-h-0 max-md:rounded-none max-md:mr-0 h-[98vh] my-auto md:mr-4 md:rounded-[24px] flex flex-col min-h-0"
           >
             <ChatList />
           </SheetContent>

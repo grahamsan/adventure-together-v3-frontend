@@ -35,15 +35,15 @@ export default function TripsBanner({
     );
 
   return (
-    <div className="relative mt-4 h-[30vh] w-full rounded-[18px] bg-[url('/images/trip-cover.png')] bg-cover bg-center">
+    <div className="relative mt-4 min-h-[min(30vh,220px)] md:h-[30vh] w-full rounded-[18px] bg-[url('/images/trip-cover.png')] bg-cover bg-center">
       <div className="absolute top-0 left-0 bg-black/50 w-full h-full rounded-[18px]" />
       <h1
-        className="text-[48px] font-bold text-second-50/60 font-bold absolute top-1/2 
-      left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 -mt-2"
+        className="text-2xl sm:text-3xl md:text-[48px] font-bold text-second-50/60 absolute top-1/2 
+      left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 px-4 text-center md:-mt-2"
       >
         Trajets
       </h1>
-      <div className="flex gap-x-3 justify-end w-full items-center absolute bottom-2 right-2 z-50 flex-wrap">
+      <div className="flex gap-2 sm:gap-x-3 justify-start md:justify-end w-full items-center absolute bottom-2 left-2 right-2 md:left-auto md:right-2 z-50 flex-wrap overflow-x-auto pb-0.5 md:overflow-visible [scrollbar-width:thin]">
         <Button
           type="button"
           className={periodBtnClass(periodFilter === "imminent")}

@@ -14,7 +14,7 @@ export default function VehiclePage() {
   const { data: vehicles, isLoading } = useVehiclesControllerFindAll();
 
   return (
-    <div className="w-full flex flex-col items-center gap-y-2 pb-2 pt-20 max-w-5xl mx-auto px-4">
+    <div className="w-full min-h-0 flex-1 flex flex-col items-center gap-y-2 pb-2 pt-4 md:pt-12 max-w-5xl mx-auto px-3 sm:px-4">
       <AddNewSection userFullName="User" />
       <div className="relative flex flex-col w-full max-w-md justify-center items-center gap-y-4 pb-2">
         <div className={`${openVehicleDialog ? "block" : "hidden"}`}>

@@ -50,7 +50,7 @@ export default function PlacesPage() {
   );
 
   return (
-    <div className="flex h-screen w-full flex-1 flex-col gap-2 overflow-hidden px-2 md:min-h-0 md:flex-row md:gap-3 md:px-4">
+    <div className="flex min-h-0 w-full flex-1 flex-col gap-2 overflow-hidden px-2 md:flex-row md:gap-3 md:px-4">
       <motion.aside
         className="flex shrink-0 flex-col overflow-hidden md:h-full md:min-h-0"
         initial={{ width: "100%" }}

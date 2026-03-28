@@ -22,7 +22,7 @@ export default function TripPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen pt-20">
+      <div className="flex justify-center items-center min-h-[50vh] flex-1 pt-20">
         <Loader2 className="h-8 w-8 animate-spin text-[var(--BRAND-500)]" />
       </div>
     );
@@ -30,14 +30,14 @@ export default function TripPage() {
 
   if (isError) {
     return (
-      <div className="flex justify-center items-center h-screen pt-20 text-red-500">
+      <div className="flex justify-center items-center min-h-[50vh] flex-1 pt-20 text-red-500">
         Une erreur est survenue lors du chargement des trajets.
       </div>
     );
   }
 
   return (
-    <div className="w-full h-screen flex flex-1 flex-col items-center gap-y-2 px-4">
+    <div className="w-full min-h-0 flex-1 flex flex-col items-center gap-y-2 px-3 sm:px-4 md:px-6">
       <TripsBanner
         periodFilter={periodFilter}
         onPeriodFilterChange={setPeriodFilter}
@@ -45,7 +45,7 @@ export default function TripPage() {
       <div
         className="relative overflow-y-auto overflow-x-hidden scrollbar-custom 
           flex flex-1 w-full justify-center items-center flex-col md:grid md:grid-cols-2
-       gap-2 px-20 pb-2"
+       gap-2 px-3 sm:px-6 md:px-12 lg:px-20 pb-2"
       >
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- DTO API vs Trip type */}
         {trips?.map((trip: any, index: number) => (

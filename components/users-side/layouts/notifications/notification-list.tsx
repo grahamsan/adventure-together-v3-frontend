@@ -292,7 +292,7 @@ export default function NotificationList({
       `}</style>
 
       {isSheet ? (
-        <div className="pt-6 pb-4 border-b border-gray-100 bg-white sticky top-0 z-10">
+        <div className="pt-6 pb-4 pr-14 border-b border-gray-100 bg-white sticky top-0 z-10">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <span className="flex items-center h-10 w-10 bg-brand-50 text-brand-500 p-2 rounded-[10px]">
