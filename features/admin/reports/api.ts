@@ -1,92 +1,58 @@
-// report-api.ts
-import { Report } from './types';
+import { reportsControllerFindAll, reportsControllerUpdateStatus } from "@/api/reports/api";
+import { adminControllerUpdateStatus } from "@/api/admin/api";
+import type { AdminReportRow, AdminReportEntityType } from "./types";
 
-export async function fetchReports(): Promise<Report[]> {
-  return new Promise((resolve) =>
-    setTimeout(() => {
-      resolve([
-        {
-          id: 'RPT-001',
-          date: '2024-10-26',
-          reportedEntity: 'Trip to Paris',
-          reportedBy: 'John Doe',
-          reason: 'Contenu de spam dans la description...',
-          status: 'new',
-          entityType: 'trip',
-        },
-        {
-          id: 'RPT-002',
-          date: '2024-10-25',
-          reportedEntity: 'Jane Smith',
-          reportedBy: 'Emily White',
-          reason: 'Comportement inapproprié dans les m...',
-          status: 'new',
-          entityType: 'user',
-        },
-        {
-          id: 'RPT-003',
-          date: '2024-10-24',
-          reportedEntity: 'Mountain Hike',
-          reportedBy: 'Chris Green',
-          reason: 'Informations trompeuses sur la difficulté...',
-          status: 'processed',
-          entityType: 'experience',
-        },
-        {
-          id: 'RPT-004',
-          date: '2024-10-23',
-          reportedEntity: 'Beach Party Experience',
-          reportedBy: 'Sarah Johnson',
-          reason: 'Photos inappropriées dans la galerie...',
-          status: 'new',
-          entityType: 'experience',
-        },
-        {
-          id: 'RPT-005',
-          date: '2024-10-22',
-          reportedEntity: 'Rome Adventure',
-          reportedBy: 'Mike Wilson',
-          reason: 'Prix non conforme à la description...',
-          status: 'processed',
-          entityType: 'trip',
-        },
-      ]);
-    }, 600)
-  );
+function mapEntityType(t: string): AdminReportEntityType {
+  const m: Record<string, AdminReportEntityType> = {
+    Expérience: "experience",
+    Trajet: "trip",
+    Utilisateur: "user",
+    Lieu: "place",
+    Commentaire: "comment",
+  };
+  return m[t] ?? "experience";
 }
 
-export async function banUser(reportId: string): Promise<void> {
-  return new Promise((resolve) =>
-    setTimeout(() => {
-      console.log(`User banned for report: ${reportId}`);
-      resolve();
-    }, 500)
-  );
+function mapReport(r: Record<string, unknown>): AdminReportRow {
+  const reporter = r.reporter as
+    | {
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+      }
+    | undefined;
+  const reportedBy =
+    [reporter?.firstName, reporter?.lastName].filter(Boolean).join(" ").trim() ||
+    reporter?.email ||
+    "—";
+  const status = r.status === "Traité" ? "processed" : "new";
+  const created = r.createdAt ? new Date(r.createdAt as string) : null;
+  const entityTypeRaw = String(r.entityType ?? "");
+  const entityId = String(r.entityId ?? "");
+
+  return {
+    id: String(r.id),
+    date: created ? created.toLocaleDateString("fr-FR") : "—",
+    reportedEntity: `${entityTypeRaw} · ${entityId.slice(0, 8)}…`,
+    reportedBy,
+    reason: String(r.motif ?? ""),
+    status,
+    entityType: mapEntityType(entityTypeRaw),
+    entityId,
+  };
 }
 
-export async function deleteExperience(reportId: string): Promise<void> {
-  return new Promise((resolve) =>
-    setTimeout(() => {
-      console.log(`Experience deleted for report: ${reportId}`);
-      resolve();
-    }, 500)
-  );
+export async function fetchReports(): Promise<AdminReportRow[]> {
+  const data = await reportsControllerFindAll();
+  const list = Array.isArray(data) ? data : [];
+  return list.map((row) => mapReport(row as Record<string, unknown>));
 }
 
-export async function deleteTrip(reportId: string): Promise<void> {
-  return new Promise((resolve) =>
-    setTimeout(() => {
-      console.log(`Trip deleted for report: ${reportId}`);
-      resolve();
-    }, 500)
-  );
+export async function markReportProcessed(reportId: string): Promise<void> {
+  await reportsControllerUpdateStatus(reportId, { status: "Traité" });
 }
 
-export async function ignoreReport(reportId: string): Promise<void> {
-  return new Promise((resolve) =>
-    setTimeout(() => {
-      console.log(`Report ignored: ${reportId}`);
-      resolve();
-    }, 300)
-  );
+/** Suspend le compte utilisateur signalé (route admin utilisateur). */
+export async function suspendReportedUser(userId: string): Promise<void> {
+  await adminControllerUpdateStatus(userId, { status: "suspended" });
 }

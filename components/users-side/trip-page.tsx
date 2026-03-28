@@ -1,12 +1,24 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useTripsControllerFindAll } from "@/api/trips/hooks";
 import { Loader2 } from "lucide-react";
 import TripSquareCard from "../shared/trip-square-card";
 import TripsBanner from "./layouts/banners/trips-banner";
+import { periodToQuery, type PeriodFilter } from "@/lib/period-filter";
 
 export default function TripPage() {
-  const { data: trips, isLoading, isError } = useTripsControllerFindAll();
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("none");
+
+  const queryParams = useMemo(
+    () => ({
+      ...periodToQuery(periodFilter),
+    }),
+    [periodFilter],
+  );
+
+  const { data: trips, isLoading, isError } =
+    useTripsControllerFindAll(queryParams);
 
   if (isLoading) {
     return (
@@ -26,12 +38,16 @@ export default function TripPage() {
 
   return (
     <div className="w-full h-screen flex flex-1 flex-col items-center gap-y-2 px-4">
-      <TripsBanner />
+      <TripsBanner
+        periodFilter={periodFilter}
+        onPeriodFilterChange={setPeriodFilter}
+      />
       <div
-        className="overflow-y-auto overflow-x-hidden scrollbar-custom 
+        className="relative overflow-y-auto overflow-x-hidden scrollbar-custom 
           flex flex-1 w-full justify-center items-center flex-col md:grid md:grid-cols-2
        gap-2 px-20 pb-2"
       >
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- DTO API vs Trip type */}
         {trips?.map((trip: any, index: number) => (
           <div key={trip.id || index} className="flex-1">
             <TripSquareCard
@@ -39,35 +55,37 @@ export default function TripPage() {
               from={trip.from}
               to={trip.to}
               date={
-                trip.startDate
-                  ? new Date(trip.startDate).toISOString()
-                  : new Date().toISOString()
-              } // formatted as string if Card expects string
+                trip.date
+                  ? `${String(trip.date).split("T")[0]}T12:00:00`
+                  : ""
+              }
               time={trip.time}
-              description={trip.tripDescription}
+              description={trip.description ?? ""}
               seatsConfirmed={trip.seatsConfirmed}
               seatsAvailable={trip.seatsAvailable}
-              excales={trip.escales?.join(", ") || "Aucune escale"}
-              ownerFullName={trip?.driverName || "Inconnu"} // mapping nested object
-              ownerAvatarUrl={trip.owner?.avatarUrl}
+              ownerFullName={trip?.driverName || "Inconnu"}
+              ownerAvatarUrl={trip.creator?.avatarUrl ?? ""}
               createdAt={
                 trip.createdAt
                   ? new Date(trip.createdAt).toISOString()
-                  : new Date().toISOString()
+                  : ""
               }
-              associatedEventName={trip.associatedEventTitle}
+              associatedEventName={trip.relatedExpName ?? ""}
               status={trip.status || "PLANIFIED"}
-              price={trip.price}
+              price={Number(trip.price)}
               hasApplied={trip.hasApplied}
               vehicleBrand={trip.vehicle.brand}
               vehicleModel={trip.vehicle.model}
               vehiclePlateNumber={trip.vehicle.plateNumber}
               vehicleImageUrl={trip.vehicle.imageUrl}
+              ownerId={trip.ownerId ?? ""}
+              applicationsCount={trip.applicationsCount ?? 0}
+              escalesList={Array.isArray(trip.escales) ? trip.escales : []}
             />
           </div>
         ))}
         {(!trips || trips.length === 0) && (
-          <div className="text-gray-500 mt-10">
+          <div className="text-gray-500 mt-10 mx-auto absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
             Aucun trajet disponible pour le moment.
           </div>
         )}

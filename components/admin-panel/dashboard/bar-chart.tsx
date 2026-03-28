@@ -11,8 +11,8 @@ interface BarChartProps {
 export function BarChart({ title, subtitle, data }: BarChartProps) {
   if (!data || data.length === 0) {
     return (
-      <div className="bg-white rounded-2xl p-6 border border-gray-200">
-        <div className="mb-6">
+      <div className="bg-white rounded-2xl p-[1.05rem] border border-gray-200">
+        <div className="mb-[1.05rem]">
           <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
           <p className="text-sm text-gray-500">{subtitle}</p>
         </div>
@@ -26,19 +26,19 @@ export function BarChart({ title, subtitle, data }: BarChartProps) {
   const maxValue = Math.max(...data.map(d => d.value));
   
   return (
-    <div className="bg-white rounded-2xl p-6 border border-gray-200">
-      <div className="mb-6">
+    <div className="bg-white rounded-2xl p-[1.05rem] border border-gray-200">
+      <div className="mb-[1.05rem]">
         <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
         <p className="text-sm text-gray-500">{subtitle}</p>
       </div>
       
-      <div className="h-64 flex items-end justify-between gap-4 pb-8">
+      <div className="h-64 flex items-end justify-between gap-[0.7rem] pb-[1.4rem]">
         {data.map((item, index) => {
           const height = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
           const isHighlighted = index >= data.length - 2;
           
           return (
-            <div key={item.label} className="flex-1 flex flex-col items-center gap-3 h-full">
+            <div key={item.label} className="flex-1 flex flex-col items-center gap-[0.7rem] h-full">
               <div className="w-full flex items-end h-full relative">
                 <div
                   className={`w-full rounded-t-xl transition-all duration-300 hover:opacity-80 ${
@@ -52,7 +52,7 @@ export function BarChart({ title, subtitle, data }: BarChartProps) {
                   }}
                 />
               </div>
-              <span className="text-xs font-medium text-gray-600 mt-2">{item.label}</span>
+              <span className="text-xs font-medium text-gray-600 mt-[0.35rem]">{item.label}</span>
             </div>
           );
         })}

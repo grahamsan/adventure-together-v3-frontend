@@ -14,14 +14,14 @@ import type { UpdateUserRoleDto, UpdateUserStatusDto } from './types';
 
 export const useAdminControllerGetStats = () => {
   return useQuery({
-    queryKey: queryKeys.admin.lists(),
+    queryKey: queryKeys.admin.stats(),
     queryFn: adminControllerGetStats,
   });
 };
 
 export const useAdminControllerFindAll = () => {
   return useQuery({
-    queryKey: queryKeys.admin.lists(),
+    queryKey: queryKeys.admin.users(),
     queryFn: adminControllerFindAll,
   });
 };
@@ -33,9 +33,10 @@ export const useAdminControllerUpdateRole = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (vars: UpdateUserRoleDto & { id: string }) => adminControllerUpdateRole(vars.id, vars),
+    mutationFn: (vars: UpdateUserRoleDto & { id: string }) =>
+      adminControllerUpdateRole(vars.id, { role: vars.role }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() });
     },
   });
 };
@@ -44,9 +45,10 @@ export const useAdminControllerUpdateStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (vars: UpdateUserStatusDto & { id: string }) => adminControllerUpdateStatus(vars.id, vars),
+    mutationFn: (vars: UpdateUserStatusDto & { id: string }) =>
+      adminControllerUpdateStatus(vars.id, { status: vars.status }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() });
     },
   });
 };
@@ -57,7 +59,7 @@ export const useAdminControllerDeleteUser = () => {
   return useMutation({
     mutationFn: (vars: { id: string }) => adminControllerDeleteUser(vars.id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.users() });
     },
   });
 };

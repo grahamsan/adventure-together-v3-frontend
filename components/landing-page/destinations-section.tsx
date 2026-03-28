@@ -1,138 +1,74 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Image from "next/image";
-import { MapPin, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 const destinations = [
   {
-    name: "Ganvié",
+    name: "Cotonou",
     image:
-      "https://images.unsplash.com/photo-1568632234165-4f91ae0f2e08?q=80&w=800&auto=format&fit=crop",
-    rating: 4.9,
-    reviews: 245,
-    description:
-      "La plus grande cité lacustre d'Afrique avec ses maisons sur pilotis",
+      "/images/amazone.jpg",
   },
   {
     name: "Ouidah",
     image:
-      "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?q=80&w=800&auto=format&fit=crop",
-    rating: 4.8,
-    reviews: 189,
-    description: "La route des esclaves et la Porte du Non-Retour",
-  },
-  {
-    name: "Pendjari",
-    image:
-      "https://images.unsplash.com/photo-1516426122078-c23e76319801?q=80&w=800&auto=format&fit=crop",
-    rating: 4.9,
-    reviews: 312,
-    description: "Parc national avec éléphants, lions et faune africaine",
-  },
-  {
-    name: "Grand Popo",
-    image:
-      "https://images.unsplash.com/photo-1589802829985-817e51171b92?q=80&w=800&auto=format&fit=crop",
-    rating: 4.7,
-    reviews: 156,
-    description: "Plages immaculées et paradis des sports nautiques",
-  },
-  {
-    name: "Abomey",
-    image:
-      "https://images.unsplash.com/photo-1588699366699-de11080bad6c?q=80&w=800&auto=format&fit=crop",
-    rating: 4.8,
-    reviews: 203,
-    description:
-      "Palais Royaux - Site classé au patrimoine mondial de l'UNESCO",
+      "/images/pdnr.jpeg",
   },
   {
     name: "Porto-Novo",
     image:
-      "https://images.unsplash.com/photo-1523805009345-7448845a9e53?q=80&w=800&auto=format&fit=crop",
-    rating: 4.6,
-    reviews: 142,
-    description: "Capitale avec architecture coloniale et musées",
+      "/images/pn.jpeg",
+  },
+  {
+    name: "Nikki",
+    image:
+      "/images/nikki.jpg",
   },
 ];
 
 export default function DestinationsSection() {
   return (
-    <section className="py-16 lg:py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+    <section className="bg-white py-20 lg:py-28">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="mb-12 text-center lg:mb-16"
         >
-          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-            Nos Destinations <span className="text-[[var(--BRAND-500)]]">Populaires</span>
+          <h2 className="text-3xl font-extrabold tracking-tight text-[#121212] lg:text-4xl">
+            Le cœur du Bénin{" "}
+            <span className="text-[var(--landing-primary)]">vibre ici</span>
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Découvrez les lieux les plus beaux et authentiques du Bénin, des
-            sites historiques aux merveilles naturelles.
+          <p className="mx-auto mt-4 max-w-2xl text-[#121212]/65">
+            Quatre villes emblématiques pour commencer votre exploration.
           </p>
         </motion.div>
 
-        {/* Destinations Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {destinations.map((destination, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 30 }}
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
+          {destinations.map((d, index) => (
+            <motion.article
+              key={d.name}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              whileHover={{ y: -8 }}
-              className="group cursor-pointer"
+              transition={{ delay: index * 0.08 }}
+              className="group relative aspect-[3/5] overflow-hidden rounded-[24px] shadow-lg ring-1 ring-black/5 lg:rounded-[28px]"
             >
-              <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300">
-                {/* Image */}
-                <div className="relative h-64 overflow-hidden">
-                  <Image
-                    src={destination.image}
-                    alt={destination.name}
-                    width={400}
-                    height={300}
-                    className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-[[var(--BRAND-500)]] text-[[var(--BRAND-500)]]" />
-                    <span className="text-sm font-semibold">
-                      {destination.rating}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <MapPin className="w-4 h-4 text-gray-400" />
-                    <h3 className="font-bold text-xl text-gray-900">
-                      {destination.name}
-                    </h3>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-4">
-                    {destination.description}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">
-                      {destination.reviews} avis
-                    </span>
-                    <Button
-                      variant="ghost"
-                      className="text-[[var(--BRAND-500)]] hover:text-[#4096ea] hover:bg-[[var(--BRAND-500)]]/10"
-                    >
-                      Explorer →
-                    </Button>
-                  </div>
-                </div>
+              <Image
+                src={d.image}
+                alt={d.name}
+                fill
+                className="object-cover grayscale-[25%] transition duration-500 group-hover:scale-105 group-hover:grayscale-0"
+                sizes="(max-width:1024px) 50vw, 25vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-4 lg:p-5">
+                <h3 className="text-lg font-bold text-white drop-shadow-md lg:text-xl">
+                  {d.name}
+                </h3>
               </div>
-            </motion.div>
+            </motion.article>
           ))}
         </div>
       </div>

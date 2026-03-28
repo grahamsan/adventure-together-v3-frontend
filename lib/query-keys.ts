@@ -43,12 +43,15 @@ export const queryKeys = {
       [...queryKeys.experiences.lists(), filters] as const,
     details: () => [...queryKeys.experiences.all, "detail"] as const,
     detail: (id: string) => [...queryKeys.experiences.details(), id] as const,
+    trips: () => [...queryKeys.experiences.all, "trips"] as const,
+    trip: (id: string) => [...queryKeys.experiences.trips(), id] as const,
   },
   // Trips
   trips: {
     all: ["trips"] as const,
     lists: () => [...queryKeys.trips.all, "list"] as const,
     list: (filters?: any) => [...queryKeys.trips.lists(), filters] as const,
+    mine: () => [...queryKeys.trips.all, "mine"] as const,
     details: () => [...queryKeys.trips.all, "detail"] as const,
     detail: (id: string) => [...queryKeys.trips.details(), id] as const,
   },
@@ -69,8 +72,17 @@ export const queryKeys = {
     all: ["admin"] as const,
     lists: () => [...queryKeys.admin.all, "list"] as const,
     list: (filters?: any) => [...queryKeys.admin.lists(), filters] as const,
+    stats: () => [...queryKeys.admin.all, "stats"] as const,
+    users: () => [...queryKeys.admin.all, "users"] as const,
     details: () => [...queryKeys.admin.all, "detail"] as const,
     detail: (id: string) => [...queryKeys.admin.details(), id] as const,
+  },
+  // Notifications
+  notifications: {
+    all: ["notifications"] as const,
+    lists: () => [...queryKeys.notifications.all, "list"] as const,
+    list: (params?: { page?: number; limit?: number }) =>
+      [...queryKeys.notifications.lists(), params] as const,
   },
   // Reports
   reports: {
@@ -95,6 +107,8 @@ export const queryKeys = {
     list: (filters?: any) => [...queryKeys.places.lists(), filters] as const,
     details: () => [...queryKeys.places.all, "detail"] as const,
     detail: (id: string) => [...queryKeys.places.details(), id] as const,
+    experiences: (placeId: string) =>
+      [...queryKeys.places.detail(placeId), "experiences"] as const,
   },
   // User Statistics
   userStatistics: {

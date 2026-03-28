@@ -1,46 +1,28 @@
-// stats-api.ts
-import { StatsData, StatsPeriod } from './types';
+import { adminControllerGetStats } from "@/api/admin/api";
+import type { StatsData, StatsPeriod } from "./types";
+import { mapAdminStatsToStatsData } from "./map-from-api";
 
-export async function fetchStats(period: StatsPeriod = '30days'): Promise<StatsData> {
-  return new Promise((resolve) =>
-    setTimeout(() => {
-      // Données simulées qui varient selon la période
-      const multiplier = period === '30days' ? 1 : period === '90days' ? 2.5 : 5;
-      
-      resolve({
-        experiencesCreated: Math.floor(1204 * multiplier),
-        experiencesChange: 5.2,
-        tripsCreated: Math.floor(876 * multiplier),
-        tripsChange: 2.1,
-        commentsPosted: Math.floor(3450 * multiplier),
-        commentsChange: 8.0,
-        reportsSubmitted: Math.floor(112 * multiplier),
-        reportsChange: -1.5,
-        newUsersVsExperiences: [
-          { label: 'Jan', value: 65 },
-          { label: 'Fev', value: 45 },
-          { label: 'Mar', value: 70 },
-          { label: 'Avr', value: 85 },
-          { label: 'Mai', value: 120 },
-          { label: 'Jun', value: 115 },
-        ],
-        tripsCreatedWeekly: [
-          { label: 'Sem 1', value: 45 },
-          { label: 'Sem 2', value: 52 },
-          { label: 'Sem 3', value: 38 },
-          { label: 'Sem 4', value: 65 },
-        ],
-      });
-    }, 800)
-  );
+export async function fetchStats(period: StatsPeriod = "30days"): Promise<StatsData | null> {
+  const raw = await adminControllerGetStats();
+  return mapAdminStatsToStatsData(raw as Record<string, unknown>, period);
 }
 
-export async function exportStatsReport(period: StatsPeriod): Promise<void> {
-  return new Promise((resolve) =>
-    setTimeout(() => {
-      console.log(`Exporting stats report for period: ${period}`);
-      // Simuler le téléchargement d'un fichier
-      resolve();
-    }, 1000)
-  );
+export async function exportStatsReport(
+  period: StatsPeriod,
+  rawStats?: Record<string, unknown> | null,
+): Promise<void> {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    period,
+    stats: rawStats ?? {},
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `stats-admin-${period}-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
 }

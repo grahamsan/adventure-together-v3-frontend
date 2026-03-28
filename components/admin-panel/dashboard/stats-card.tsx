@@ -14,15 +14,15 @@ export function StatCard({ title, icon, value, change, changeLabel }: StatCardPr
   const isPositive = change >= 0;
   
   return (
-    <div className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-      <div className="flex items-center gap-3 mb-4">
+    <div className="bg-white rounded-2xl p-[1.05rem] border border-gray-200 hover:shadow-lg transition-shadow">
+      <div className="flex items-center gap-[0.7rem] mb-[0.7rem]">
         <div className="p-2 bg-brand-50 rounded-lg text-brand-400">
           {icon}
         </div>
         <h3 className="text-sm font-medium text-brand-600">{title}</h3>
       </div>
       
-      <div className="space-y-2">
+      <div className="space-y-[0.35rem]">
         <p className="text-4xl font-bold text-brand-800">
           {value.toLocaleString()}
         </p>

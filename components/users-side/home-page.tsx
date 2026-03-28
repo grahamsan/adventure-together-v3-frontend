@@ -1,17 +1,32 @@
 "use client";
+
+import { useMemo, useState } from "react";
 import EventSquareCard from "../shared/event-square-card";
 import { useExperiencesControllerFindAll } from "@/api/experiences/hooks";
 import { CalendarSearch } from "lucide-react";
 import { motion } from "framer-motion";
 import EventsPageBanner from "./layouts/banners/events-page-banner";
+import { periodToQuery, type PeriodFilter } from "@/lib/period-filter";
 
 export default function HomePage() {
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("none");
+
+  const queryParams = useMemo(
+    () => ({
+      ...periodToQuery(periodFilter),
+    }),
+    [periodFilter],
+  );
+
   const { data: experiencesResponse, isLoading } =
-    useExperiencesControllerFindAll();
+    useExperiencesControllerFindAll(queryParams);
 
   return (
     <div className="w-full h-screen flex flex-1 flex-col items-center gap-y-2 px-4">
-      <EventsPageBanner />
+      <EventsPageBanner
+        periodFilter={periodFilter}
+        onPeriodFilterChange={setPeriodFilter}
+      />
       {isLoading ? (
         <div className="flex flex-col items-center gap-y-2 items-center justify-center w-full h-full">
           <CalendarSearch className="w-32 h-32 animate-pulse text-zinc-200" />

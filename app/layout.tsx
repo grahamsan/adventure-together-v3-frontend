@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${plusJakartaSans.className} antialiased`}>
+      <body className={`${plusJakartaSans.className} antialiased scrollbar-custom`}>
         <MantineRootProvider>
           <Providers>{children}</Providers>
         </MantineRootProvider>

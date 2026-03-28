@@ -1,119 +1,54 @@
-import React, { useState, useMemo } from "react";
-import { Search, Bell, Calendar, MapPin, Users, CheckCheck, MessageSquare, AlertCircle } from "lucide-react";
+"use client";
 
-// Types
-type Notification = {
-  id: number;
-  type: "join" | "message" | "update" | "reminder" | "cancellation";
-  title: string;
-  message: string;
-  timestamp: string;
-  isRead: boolean;
-  avatar?: string;
-  tripName?: string;
-};
+import React, { useMemo, useState } from "react";
+import {
+  Search,
+  Bell,
+  MapPin,
+  Users,
+  CheckCheck,
+  MessageSquare,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { formatTimestamp } from "@/utils/format-timestamp";
+import {
+  useNotificationsControllerFindAll,
+  useNotificationsControllerMarkAsRead,
+  useNotificationsControllerMarkAllAsRead,
+} from "@/api/notifications/hooks";
+import { useTripsControllerAcknowledgeTripCompletion } from "@/api/trips/hooks";
+import { useReportsControllerReportTrip } from "@/api/reports/hooks";
+import type { NotificationDto } from "@/api/notifications/types";
+import { queryKeys } from "@/lib/query-keys";
+import { cn } from "@/lib/utils";
 
-// Données de test
-const mockNotifications: Notification[] = [
-  {
-    id: 1,
-    type: "join",
-    title: "Nouveau participant",
-    message: "Marie Dubois a rejoint votre trajet Cotonou → Port-Novo",
-    timestamp: "Il y a 10 min",
-    isRead: false,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marie",
-    tripName: "Cotonou → Port-Novo",
-  },
-  {
-    id: 2,
-    type: "message",
-    title: "Nouveau message",
-    message: "Jean Martin : \"Je serai là à 14h précises\"",
-    timestamp: "Il y a 1h",
-    isRead: false,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jean",
-    tripName: "Cotonou → Ouidah",
-  },
-  {
-    id: 3,
-    type: "reminder",
-    title: "Rappel de trajet",
-    message: "Votre trajet Parakou → Nikki commence dans 24 heures",
-    timestamp: "Il y a 2h",
-    isRead: false,
-    tripName: "Parakou → Nikki",
-  },
-  {
-    id: 4,
-    type: "update",
-    title: "Modification du trajet",
-    message: "L'heure de départ a été modifiée pour le trajet Parakou → Nikki",
-    timestamp: "Hier",
-    isRead: true,
-    tripName: "Parakou → Nikki",
-  },
-  {
-    id: 5,
-    type: "join",
-    title: "Nouveau participant",
-    message: "Emma Rousseau a rejoint votre trajet Bordeaux → Toulouse",
-    timestamp: "Il y a 2 jours",
-    isRead: true,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emma",
-    tripName: "Bordeaux → Toulouse",
-  },
-  {
-    id: 6,
-    type: "message",
-    title: "Nouveau message",
-    message: "Sophie Laurent : \"On peut faire une pause café ?\"",
-    timestamp: "Il y a 2 jours",
-    isRead: true,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie",
-    tripName: "Abomey → Bohicon",
-  },
-  {
-    id: 7,
-    type: "cancellation",
-    title: "Trajet annulé",
-    message: "Le trajet Lomé → Accra a été annulé par le conducteur",
-    timestamp: "Il y a 3 jours",
-    isRead: true,
-    tripName: "Lomé → Accra",
-  },
-  {
-    id: 8,
-    type: "reminder",
-    title: "Évaluation en attente",
-    message: "N'oubliez pas d'évaluer votre trajet Natitingou → Tanguiéta",
-    timestamp: "Il y a 4 jours",
-    isRead: true,
-    tripName: "Natitingou → Tanguiéta",
-  },
-  {
-    id: 9,
-    type: "update",
-    title: "Point de rendez-vous modifié",
-    message: "Le lieu de départ a changé pour le trajet Djougou → Parakou",
-    timestamp: "Il y a 5 jours",
-    isRead: true,
-    tripName: "Djougou → Parakou",
-  },
-  {
-    id: 10,
-    type: "message",
-    title: "Nouveau message",
-    message: "Paul Kouassi : \"Merci pour le trajet, c'était super !\"",
-    timestamp: "Il y a 1 semaine",
-    isRead: true,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Paul",
-    tripName: "Porto-Novo → Cotonou",
-  },
-];
+type DisplayType =
+  | "join"
+  | "message"
+  | "update"
+  | "reminder"
+  | "cancellation";
 
-// Utilitaires
-const getNotificationIcon = (type: Notification["type"]) => {
+function mapToDisplayType(n: NotificationDto): DisplayType {
+  if (n.meta?.kind === "trip_marked_done") return "update";
+  if (n.type === "message") return "message";
+  if (n.type === "reminder") return "reminder";
+  if (n.type === "trip") return "join";
+  return "update";
+}
+
+const getNotificationIcon = (type: DisplayType) => {
   const iconClass = "w-5 h-5";
   switch (type) {
     case "join":
@@ -131,7 +66,7 @@ const getNotificationIcon = (type: Notification["type"]) => {
   }
 };
 
-const getNotificationColor = (type: Notification["type"]) => {
+const getNotificationColor = (type: DisplayType) => {
   switch (type) {
     case "join":
       return "bg-green-100 text-green-600";
@@ -148,13 +83,18 @@ const getNotificationColor = (type: Notification["type"]) => {
   }
 };
 
-// Composants
-const HighlightedText = ({ text, search }: { text: string; search: string }) => {
+const HighlightedText = ({
+  text,
+  search,
+}: {
+  text: string;
+  search: string;
+}) => {
   if (!search.trim()) return <span>{text}</span>;
 
   const regex = new RegExp(
     `(${search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
-    "gi"
+    "gi",
   );
   const parts = text.split(regex);
 
@@ -167,7 +107,7 @@ const HighlightedText = ({ text, search }: { text: string; search: string }) => 
           </mark>
         ) : (
           <span key={i}>{part}</span>
-        )
+        ),
       )}
     </span>
   );
@@ -176,15 +116,20 @@ const HighlightedText = ({ text, search }: { text: string; search: string }) => 
 const NotificationCard = ({
   notification,
   searchQuery,
-  onClick,
+  onOpen,
+  tripDoneActions,
 }: {
-  notification: Notification;
+  notification: NotificationDto;
   searchQuery: string;
-  onClick: () => void;
+  onOpen: () => void;
+  tripDoneActions?: React.ReactNode;
 }) => {
+  const displayType = mapToDisplayType(notification);
+  const timeLabel = formatTimestamp(notification.timestamp);
+
   return (
     <div
-      onClick={onClick}
+      onClick={onOpen}
       className={`flex items-start gap-3 p-4 cursor-pointer 
       transition-all duration-300 rounded-[18px] border ${
         notification.isRead
@@ -193,23 +138,15 @@ const NotificationCard = ({
       }`}
     >
       <div className="relative flex-shrink-0">
-        {notification.avatar ? (
-          <img
-            src={notification.avatar}
-            alt="Avatar"
-            className="w-12 h-12 rounded-full"
-          />
-        ) : (
-          <div
-            className={`w-12 h-12 rounded-full flex items-center justify-center ${getNotificationColor(
-              notification.type
-            )}`}
-          >
-            {getNotificationIcon(notification.type)}
-          </div>
-        )}
+        <div
+          className={`w-12 h-12 rounded-full flex items-center justify-center ${getNotificationColor(
+            displayType,
+          )}`}
+        >
+          {getNotificationIcon(displayType)}
+        </div>
         {!notification.isRead && (
-          <div className="absolute -top-1 -right-1 bg-[var(--BRAND-500)] w-3 h-3 rounded-full border-2 border-white"></div>
+          <div className="absolute -top-1 -right-1 bg-[var(--BRAND-500)] w-3 h-3 rounded-full border-2 border-white" />
         )}
       </div>
 
@@ -217,39 +154,55 @@ const NotificationCard = ({
         <div className="flex items-start justify-between mb-1 gap-2">
           <h3
             className={`text-[15px] ${
-              notification.isRead ? "font-medium text-gray-700" : "font-semibold text-gray-900"
+              notification.isRead
+                ? "font-medium text-gray-700"
+                : "font-semibold text-gray-900"
             }`}
           >
             <HighlightedText text={notification.title} search={searchQuery} />
           </h3>
           <span className="text-xs text-gray-500 flex-shrink-0 mt-0.5">
-            {notification.timestamp}
+            {timeLabel}
           </span>
         </div>
 
-        <p
-          className={`text-sm mb-1 ${
-            notification.isRead ? "text-gray-500" : "text-gray-700"
-          }`}
-        >
-          <HighlightedText text={notification.message} search={searchQuery} />
-        </p>
-
-        {notification.tripName && (
-          <span className="inline-flex items-center gap-1 text-xs text-gray-400 mt-1">
-            <MapPin className="w-3 h-3" />
-            <HighlightedText text={notification.tripName} search={searchQuery} />
-          </span>
+        {notification.description && (
+          <p
+            className={`text-sm mb-1 ${
+              notification.isRead ? "text-gray-500" : "text-gray-700"
+            }`}
+          >
+            <HighlightedText
+              text={notification.description}
+              search={searchQuery}
+            />
+          </p>
         )}
+
+        {tripDoneActions}
       </div>
     </div>
   );
 };
 
-// Composant principal
-export default function NotificationList() {
+export default function NotificationList({
+  variant = "default",
+}: {
+  variant?: "default" | "sheet";
+}) {
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [reportTripId, setReportTripId] = useState<string | null>(null);
+  const [reportMotif, setReportMotif] = useState("");
+
+  const { data, isLoading, isError, refetch } =
+    useNotificationsControllerFindAll({ page: 1, limit: 50 });
+  const markAsReadMutation = useNotificationsControllerMarkAsRead();
+  const markAllAsReadMutation = useNotificationsControllerMarkAllAsRead();
+  const ackMutation = useTripsControllerAcknowledgeTripCompletion();
+  const reportMutation = useReportsControllerReportTrip();
+
+  const notifications = data?.data ?? [];
 
   const filteredNotifications = useMemo(() => {
     if (!searchQuery.trim()) return notifications;
@@ -259,69 +212,192 @@ export default function NotificationList() {
     return notifications.filter(
       (notif) =>
         notif.title.toLowerCase().includes(query) ||
-        notif.message.toLowerCase().includes(query) ||
-        notif.tripName?.toLowerCase().includes(query)
+        (notif.description?.toLowerCase().includes(query) ?? false),
     );
   }, [notifications, searchQuery]);
 
   const totalUnread = notifications.filter((n) => !n.isRead).length;
 
   const markAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((notif) => ({ ...notif, isRead: true }))
+    markAllAsReadMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.success("Toutes les notifications sont marquées comme lues.");
+      },
+      onError: () => {
+        toast.error("Impossible de tout marquer comme lu.");
+      },
+    });
+  };
+
+  const markAsRead = (id: string) => {
+    markAsReadMutation.mutate(id, {
+      onError: () => {
+        toast.error("Impossible de marquer comme lu.");
+      },
+    });
+  };
+
+  const handleCardOpen = (n: NotificationDto) => {
+    if (!n.isRead) {
+      markAsRead(n.id);
+    }
+  };
+
+  const submitReport = () => {
+    if (!reportTripId) return;
+    reportMutation.mutate(
+      { id: reportTripId, motif: reportMotif },
+      {
+        onSuccess: () => {
+          toast.success("Signalement envoyé.");
+          setReportTripId(null);
+          setReportMotif("");
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.notifications.all,
+          });
+        },
+        onError: () => {
+          toast.error("Impossible d’envoyer le signalement.");
+        },
+      },
     );
   };
 
-  const markAsRead = (id: number) => {
-    setNotifications((prev) =>
-      prev.map((notif) => (notif.id === id ? { ...notif, isRead: true } : notif))
-    );
+  const confirmTripDone = (tripId: string) => {
+    ackMutation.mutate(tripId, {
+      onSuccess: () => {
+        toast.success("Merci, votre confirmation a bien été enregistrée.");
+      },
+      onError: () => {
+        toast.error("Impossible d’enregistrer la confirmation.");
+      },
+    });
   };
+
+  const isSheet = variant === "sheet";
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 max-w-md mx-auto">
+    <div
+      className={cn(
+        "flex flex-col min-h-0",
+        isSheet
+          ? "flex-1 h-full bg-white px-4 rounded-[12px]"
+          : "h-screen max-w-md mx-auto bg-gray-50",
+      )}
+    >
       <style>{`
         :root {
           --BRAND-500: #f4a261;
         }
       `}</style>
 
-      {/* Header */}
-      <div className="px-4 pt-4 pb-3 border-b border-gray-200 bg-white">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-brand-800">Notifications</h1>
+      {isSheet ? (
+        <div className="pt-6 pb-4 border-b border-gray-100 bg-white sticky top-0 z-10">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <span className="flex items-center h-10 w-10 bg-brand-50 text-brand-500 p-2 rounded-[10px]">
+                <Bell className="w-5 h-5 mx-auto" />
+              </span>
+              <h1 className="text-2xl font-semibold text-second-500 tracking-tight">
+                Notifications
+              </h1>
+            </div>
+            {totalUnread > 0 && (
+              <span className="bg-[var(--BRAND-500)] text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                {totalUnread}
+              </span>
+            )}
+          </div>
+
           {totalUnread > 0 && (
-            <span className="bg-second-500 text-white text-xs font-medium px-2.5 py-1 rounded-full">
-              {totalUnread} non lu{totalUnread > 1 ? "s" : ""}
-            </span>
+            <button
+              type="button"
+              onClick={markAllAsRead}
+              disabled={markAllAsReadMutation.isPending}
+              className="mb-4 flex items-center gap-2 text-sm text-[var(--BRAND-500)] hover:text-[var(--BRAND-600)] font-medium transition-colors disabled:opacity-50"
+            >
+              {markAllAsReadMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <CheckCheck className="w-4 h-4" />
+              )}
+              Tout marquer comme lu
+            </button>
           )}
-        </div>
 
-        {totalUnread > 0 && (
-          <button
-            onClick={markAllAsRead}
-            className="mb-3 flex items-center gap-2 text-sm text-[var(--BRAND-500)] hover:text-[var(--BRAND-600)] font-medium transition-colors"
-          >
-            <CheckCheck className="w-4 h-4" />
-            Tout marquer comme lu
-          </button>
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-4.5 h-4.5" />
+            <input
+              type="text"
+              placeholder="Rechercher…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-gray-50 border-gray-100 rounded-xl text-sm 
+            focus:outline-none focus:ring-2 focus:ring-[var(--BRAND-500)]/20 focus:bg-white 
+            transition-all duration-200 placeholder:text-gray-400"
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="px-4 pt-4 pb-3 border-b border-gray-200 bg-white">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-bold text-brand-800">Notifications</h1>
+            {totalUnread > 0 && (
+              <span className="bg-second-500 text-white text-xs font-medium px-2.5 py-1 rounded-full">
+                {totalUnread} non lu{totalUnread > 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+
+          {totalUnread > 0 && (
+            <button
+              type="button"
+              onClick={markAllAsRead}
+              disabled={markAllAsReadMutation.isPending}
+              className="mb-3 flex items-center gap-2 text-sm text-[var(--BRAND-500)] hover:text-[var(--BRAND-600)] font-medium transition-colors disabled:opacity-50"
+            >
+              {markAllAsReadMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <CheckCheck className="w-4 h-4" />
+              )}
+              Tout marquer comme lu
+            </button>
+          )}
+
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Rechercher une notification"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border-0 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--BRAND-500)] focus:bg-white transition-colors placeholder:text-gray-400"
+            />
+          </div>
+        </div>
+      )}
+
+      <div
+        className={cn(
+          "flex-1 overflow-y-auto min-h-0",
+          isSheet ? "py-2" : "p-4",
         )}
-
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Rechercher une notification"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border-0 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--BRAND-500)] focus:bg-white transition-colors placeholder:text-gray-400"
-          />
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {filteredNotifications.length === 0 ? (
+      >
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-2">
+            <Loader2 className="w-10 h-10 animate-spin text-[var(--BRAND-500)]" />
+            <p className="text-sm">Chargement…</p>
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-3 px-4 text-center">
+            <AlertCircle className="w-12 h-12 text-red-400" />
+            <p className="text-sm">Impossible de charger les notifications.</p>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              Réessayer
+            </Button>
+          </div>
+        ) : filteredNotifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500">
             <Bell className="w-16 h-16 mb-4 text-gray-300" />
             <p className="text-lg font-medium">Aucune notification</p>
@@ -333,17 +409,100 @@ export default function NotificationList() {
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {filteredNotifications.map((notification) => (
-              <NotificationCard
-                key={notification.id}
-                notification={notification}
-                searchQuery={searchQuery}
-                onClick={() => markAsRead(notification.id)}
-              />
-            ))}
+            {filteredNotifications.map((notification) => {
+              const isTripDone =
+                notification.meta?.kind === "trip_marked_done" &&
+                notification.meta?.tripId;
+
+              const tripDoneActions = isTripDone ? (
+                <div
+                  className="flex flex-wrap gap-2 mt-3"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full"
+                    disabled={
+                      ackMutation.isPending &&
+                      ackMutation.variables === notification.meta?.tripId
+                    }
+                    onClick={() =>
+                      confirmTripDone(notification.meta!.tripId as string)
+                    }
+                  >
+                    {ackMutation.isPending &&
+                    ackMutation.variables === notification.meta?.tripId ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : null}
+                    Confirmer
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full text-red-600 border-red-200 hover:bg-red-50"
+                    onClick={() =>
+                      setReportTripId(notification.meta!.tripId as string)
+                    }
+                  >
+                    Signaler
+                  </Button>
+                </div>
+              ) : null;
+
+              return (
+                <NotificationCard
+                  key={notification.id}
+                  notification={notification}
+                  searchQuery={searchQuery}
+                  onOpen={() => handleCardOpen(notification)}
+                  tripDoneActions={tripDoneActions}
+                />
+              );
+            })}
           </div>
         )}
       </div>
+
+      <Dialog
+        open={Boolean(reportTripId)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setReportTripId(null);
+            setReportMotif("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Signaler ce trajet</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            placeholder="Décrivez le motif du signalement (optionnel)"
+            value={reportMotif}
+            onChange={(e) => setReportMotif(e.target.value)}
+            className="min-h-24"
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setReportTripId(null)}>
+              Annuler
+            </Button>
+            <Button
+              onClick={submitReport}
+              disabled={reportMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {reportMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Envoyer"
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

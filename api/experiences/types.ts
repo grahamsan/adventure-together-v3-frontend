@@ -1,5 +1,4 @@
-// Auto-generated TypeScript types
-
+import { Trip } from "../trips/types";
 export interface CreateExperienceDto {
   title: string;
   description: string;
@@ -8,9 +7,14 @@ export interface CreateExperienceDto {
   dateEnd: string;
   type?: "road-trip" | "event";
   image?: string;
+  /** Lieu associé (many-to-many côté API). */
+  placeId?: string;
 }
 
+export type UpdateExperienceDto = Partial<CreateExperienceDto>;
+
 export interface ExperienceOwner {
+  id: string;
   fullName: string;
   avatarUrl: any; // Using any as requested, though string | null would be stricter
 }
@@ -38,4 +42,19 @@ export interface ExperienceResponse {
   total: number;
   page: number;
   limit: number;
+}
+
+/** Aligné sur GetExperiencesQueryDto côté API. */
+export interface GetExperiencesQueryParams {
+  search?: string;
+  imminent?: boolean;
+  month?: boolean;
+  nextMonth?: boolean;
+  date?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface TripsByExperienceResponse {
+  data: Trip[];
 }

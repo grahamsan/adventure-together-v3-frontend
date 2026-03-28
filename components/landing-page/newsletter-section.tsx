@@ -1,48 +1,51 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 export default function NewsletterSection() {
+  const [email, setEmail] = useState("");
+
   return (
-    <section className="py-16 lg:py-24 bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <section className="bg-white py-16 lg:py-20">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="space-y-8"
+          className="rounded-[32px] bg-[#121212] px-6 py-12 text-center shadow-2xl shadow-black/20 sm:px-10 lg:px-14 lg:py-14"
         >
-          <div>
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Abonnez-vous pour recevoir nos
-              <br />
-              <span className="text-[[var(--BRAND-500)]]">Dernières Actualités</span>
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Restez informé des offres exclusives, des guides de destination et
-              des conseils d'initiés pour explorer l'Afrique de l'Ouest.
-            </p>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto"
+          <h2 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl lg:text-4xl">
+            L&apos;aventure béninoise s&apos;invite chez vous.
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/65 lg:text-base">
+            Idées de sorties, nouveautés et inspirations voyage — une fois par
+            mois, sans spam.
+          </p>
+          <form
+            className="mx-auto mt-10 flex max-w-lg flex-col gap-4 sm:flex-row sm:items-stretch"
+            onSubmit={(e) => {
+              e.preventDefault();
+            }}
           >
+            <label htmlFor="landing-newsletter" className="sr-only">
+              Adresse e-mail
+            </label>
             <input
+              id="landing-newsletter"
               type="email"
-              placeholder="Entrez votre email"
-              className="flex-1 px-6 py-4 rounded-full border border-gray-300 outline-none focus:border-[[var(--BRAND-500)]] focus:ring-2 focus:ring-[[var(--BRAND-500)]]/20"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="votre@email.com"
+              className="min-h-[52px] flex-1 rounded-full border border-white/15 bg-[#1a1a1a] px-6 text-sm text-white outline-none ring-0 placeholder:text-white/35 focus:border-[var(--landing-primary)] focus:ring-2 focus:ring-[var(--landing-primary)]/30"
             />
-            <Button className="bg-[[var(--BRAND-500)]] hover:bg-[#4096ea] text-white px-8 py-4 rounded-full">
-              S'abonner
-              <Send className="w-5 h-5 ml-2" />
-            </Button>
-          </motion.div>
+            <button
+              type="submit"
+              className="min-h-[52px] rounded-full bg-[var(--landing-primary)] px-8 text-sm font-semibold text-white transition hover:bg-[var(--landing-primary-hover)]"
+            >
+              S&apos;inscrire
+            </button>
+          </form>
         </motion.div>
       </div>
     </section>

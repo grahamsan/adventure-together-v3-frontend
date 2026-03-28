@@ -1,40 +1,39 @@
-export interface GetNotificationsParams {
-  page?: number;
-  limit?: number;
-}
+export type BackendNotificationType =
+  | "trip"
+  | "message"
+  | "reminder"
+  | string;
 
-export type NotificationType = "message" | "trip" | "reminder";
-export type NotificationPriority = "low" | "normal" | "high";
+export type NotificationPriority = "low" | "normal" | "high" | string;
 
 export interface NotificationAction {
-  params: Record<string, string>;
-  targetRoute: string;
+  targetRoute?: string;
+  params?: Record<string, string>;
 }
 
 export interface NotificationMeta {
-  senderId?: string;
-  conversationId?: string;
+  kind?: string;
   tripId?: string;
-  applicantId?: string;
+  ownerId?: string;
+  tripStatus?: string;
   accepted?: boolean;
-  reminderKey?: string;
-  daysBeforeTrip?: number;
+  [key: string]: unknown;
 }
 
-export interface Notification {
+export interface NotificationDto {
   id: string;
   title: string;
-  description: string;
-  type: NotificationType;
+  description?: string;
+  type: BackendNotificationType;
   priority: NotificationPriority;
   isRead: boolean;
-  timestamp: string; // ISO string
-  action: NotificationAction;
-  meta: NotificationMeta;
+  timestamp: string;
+  action?: NotificationAction;
+  meta?: NotificationMeta;
 }
 
-export interface PaginatedNotificationsResponse {
-  data: Notification[];
+export interface PaginatedNotificationsDto {
+  data: NotificationDto[];
   total: number;
   page: number;
   limit: number;

@@ -20,7 +20,7 @@ export default function AdminGuard({ children }: { children: ReactNode }) {
 
   if (!isAdmin) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen w-full space-y-4 text-center">
+      <div className="flex flex-col items-center justify-center h-screen w-full space-y-[0.7rem] text-center">
         <h1 className="text-4xl font-bold text-red-600">403</h1>
         <h2 className="text-2xl font-semibold">Accès refusé</h2>
         <p className="text-gray-600 max-w-md">

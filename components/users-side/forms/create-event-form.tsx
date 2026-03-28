@@ -3,7 +3,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -23,29 +22,55 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { CalendarIcon, Upload, Plus, Loader2 } from "lucide-react";
+import { CalendarIcon, Upload, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useExperiencesControllerCreate } from "@/api/experiences/hooks";
 import { useUploadControllerUploadMultiple } from "@/api/upload/hooks";
 import toast from "react-hot-toast";
-import { formatTimestamp } from "@/utils/format-timestamp";
+import { isBefore, startOfDay } from "date-fns";
 import { formatRelativeDate } from "@/utils/format-relative-date";
+import PlaceCombobox, {
+  type PlaceOption,
+} from "@/components/shared/place-combobox";
 
-const eventSchema = z.object({
-  title: z.string().min(2, "Le titre doit contenir au moins 2 caractères"),
-  description: z
-    .string()
-    .min(2, "La description doit contenir au moins 2 caractères"),
-  location: z.string().min(2, "Le lieu doit contenir au moins 2 caractères"),
-  image: z.instanceof(File).optional(),
-  dateStart: z.date(),
-  dateEnd: z.date(),
-});
+const eventSchema = z
+  .object({
+    title: z.string().min(2, "Le titre doit contenir au moins 2 caractères"),
+    description: z
+      .string()
+      .min(2, "La description doit contenir au moins 2 caractères"),
+    /** Saisie libre ; masquée si un lieu plateforme est choisi (nom copié automatiquement). */
+    location: z.string(),
+    placeId: z.string().optional(),
+    image: z.instanceof(File).optional(),
+    dateStart: z.date(),
+    dateEnd: z.date(),
+  })
+  .superRefine((data, ctx) => {
+    const hasPlatformPlace = Boolean(data.placeId?.trim());
+    if (!hasPlatformPlace) {
+      const loc = data.location?.trim() ?? "";
+      if (loc.length < 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            "Indiquez un lieu (au moins 2 caractères) ou choisissez un lieu sur la plateforme.",
+          path: ["location"],
+        });
+      }
+    }
+    if (isBefore(startOfDay(data.dateEnd), startOfDay(data.dateStart))) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "La date de fin doit être le même jour ou après la date de début.",
+        path: ["dateEnd"],
+      });
+    }
+  });
 export interface CreateEventFormProps {
   open?: boolean;
   onClose?: () => void;
@@ -68,10 +93,17 @@ export default function CreateEventForm({
       title: "",
       description: "",
       location: "",
+      placeId: "",
       dateStart: new Date(),
       dateEnd: new Date(),
     },
   });
+
+  const placeIdWatch = useWatch({ control: form.control, name: "placeId" });
+  const dateStartWatch = useWatch({ control: form.control, name: "dateStart" });
+  const hasPlatformPlace = Boolean(placeIdWatch?.trim());
+
+  const todayStart = startOfDay(new Date());
 
   const onSubmit = async (values: z.infer<typeof eventSchema>) => {
     try {
@@ -92,16 +124,19 @@ export default function CreateEventForm({
         }
       }
 
-      // 2. Create Experience
+      // 2. Create Experience — `location` = nom affiché (saisie libre ou titre du lieu plateforme)
       const experiencePayload = {
         title: values.title,
         description: values.description,
-        location: values.location,
+        location: values.location.trim(),
         dateStart: values.dateStart.toISOString(),
         dateEnd: values.dateEnd.toISOString(),
         image: imageUrl,
-        type: "event", // Defaulting to 'event' as per current specific usage, or could be dynamic
-      } as const; // using as const to help with specific string literal types if needed
+        type: "event" as const,
+        ...(values.placeId?.trim()
+          ? { placeId: values.placeId.trim() }
+          : {}),
+      };
 
       await createExperienceMutation.mutateAsync(experiencePayload);
 
@@ -188,20 +223,61 @@ export default function CreateEventForm({
                   )}
                 />
 
-                {/* LOCATION */}
                 <FormField
                   control={form.control}
-                  name="location"
+                  name="placeId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Lieu</FormLabel>
+                      <FormLabel>Lieu sur la plateforme</FormLabel>
+                      <p className="mb-2 text-xs text-muted-foreground">
+                        Optionnel. Utilisez un lieu de la plateforme pour faciliter la recherche.
+                      </p>
                       <FormControl>
-                        <Input placeholder="Lieu de l'événement" {...field} />
+                        <PlaceCombobox
+                          value={field.value ?? ""}
+                          onValueChange={field.onChange}
+                          onPlaceSelect={(place: PlaceOption | null) => {
+                            if (place) {
+                              form.setValue("location", place.title, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              });
+                            } else {
+                              form.setValue("location", "", {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              });
+                            }
+                          }}
+                          disabled={
+                            createExperienceMutation.isPending ||
+                            uploadMutation.isPending
+                          }
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {!hasPlatformPlace && (
+                  <FormField
+                    control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Lieu (saisie libre)</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Adresse, ville, lieu de l'événement…"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <div className="flex-1 flex items-center justify-between">
                   <FormField
@@ -230,8 +306,18 @@ export default function CreateEventForm({
                             <Calendar
                               mode="single"
                               selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) => date < new Date()}
+                              onSelect={(date) => {
+                                if (!date) return;
+                                field.onChange(date);
+                                // Même jour que le début par défaut ; l’utilisateur peut ajuster la fin ensuite.
+                                form.setValue("dateEnd", date, {
+                                  shouldValidate: true,
+                                  shouldDirty: true,
+                                });
+                              }}
+                              disabled={(date) =>
+                                isBefore(startOfDay(date), todayStart)
+                              }
                             />
                           </PopoverContent>
                         </Popover>
@@ -247,10 +333,10 @@ export default function CreateEventForm({
                       <FormItem>
                         <FormLabel>Date de fin</FormLabel>
                         <Popover>
-                          <PopoverTrigger asChild>
+                          <PopoverTrigger asChild> 
                             <FormControl>
                               <div
-                                className={cn(
+                                className={cn( 
                                   "w-full justify-start text-left font-normal flex items-center gap-x-2 bg-red-50 p-2 w-fit rounded-lg text-red-500 font-semibold cursor-pointer",
                                   !field.value && "text-muted-foreground",
                                 )}
@@ -267,7 +353,11 @@ export default function CreateEventForm({
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
-                              disabled={(date) => date < new Date()}
+                              disabled={(date) => {
+                                const start = dateStartWatch ?? field.value;
+                                const minDay = startOfDay(start);
+                                return isBefore(startOfDay(date), minDay);
+                              }}
                             />
                           </PopoverContent>
                         </Popover>

@@ -5,6 +5,9 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import {
   Form,
   FormField,
@@ -16,6 +19,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useAuthControllerLogin } from "@/api/auth/hooks";
+import { userControllerGetMe } from "@/api/users/api";
+import { queryKeys } from "@/lib/query-keys";
 
 const adminLoginSchema = z.object({
   email: z.string().email("Email invalide"),
@@ -24,9 +30,20 @@ const adminLoginSchema = z.object({
 
 type AdminLoginFormValues = z.infer<typeof adminLoginSchema>;
 
+function extractAccessToken(response: unknown): string | undefined {
+  if (!response || typeof response !== "object") return undefined;
+  const r = response as Record<string, unknown>;
+  const nested = r.data as Record<string, unknown> | undefined;
+  if (typeof r.accessToken === "string") return r.accessToken;
+  if (nested && typeof nested.accessToken === "string") return nested.accessToken;
+  return undefined;
+}
+
 export default function AdminLoginForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const loginMutation = useAuthControllerLogin();
 
   const form = useForm<AdminLoginFormValues>({
     resolver: zodResolver(adminLoginSchema),
@@ -36,23 +53,53 @@ export default function AdminLoginForm() {
     },
   });
 
-  const onSubmit = async (values: AdminLoginFormValues) => {
-    setIsSubmitting(true);
-    try {
-      // TODO: Replace with actual API call
-      console.log("Admin login:", values);
+  const onSubmit = (values: AdminLoginFormValues) => {
+    loginMutation.mutate(values, {
+      onSuccess: async (response) => {
+        const token = extractAccessToken(response);
+        if (!token) {
+          toast.error("Réponse de connexion invalide (token manquant).");
+          return;
+        }
 
-      // Mock authentication
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+        localStorage.setItem("ACCESS_TOKEN", token);
 
-      // Redirect to dashboard
-      window.location.href = "/dashboard";
-    } catch (error) {
-      console.error("Login error:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+        try {
+          const me = await userControllerGetMe();
+          if (me.role !== "Admin") {
+            localStorage.removeItem("ACCESS_TOKEN");
+            localStorage.removeItem("REFRESH_TOKEN");
+            toast.error(
+              "Ce compte n’a pas le rôle administrateur. Utilisez la connexion classique.",
+            );
+            return;
+          }
+
+          await queryClient.invalidateQueries({ queryKey: queryKeys.users.me });
+          toast.success("Connexion administrateur réussie.");
+          router.push("/dashboard");
+        } catch {
+          localStorage.removeItem("ACCESS_TOKEN");
+          localStorage.removeItem("REFRESH_TOKEN");
+          toast.error("Impossible de vérifier votre profil. Réessayez.");
+        }
+      },
+      onError: (error: unknown) => {
+        const err = error as {
+          response?: { data?: { message?: string | string[] } };
+        };
+        const msg = err?.response?.data?.message;
+        const message = Array.isArray(msg)
+          ? msg.join(", ")
+          : typeof msg === "string"
+            ? msg
+            : "Identifiants incorrects ou compte indisponible.";
+        toast.error(message);
+      },
+    });
   };
+
+  const isSubmitting = loginMutation.isPending;
 
   return (
     <Card className="w-full max-w-md p-8 shadow-xl">
@@ -149,7 +196,7 @@ export default function AdminLoginForm() {
       </Form>
 
       <div className="mt-6 text-center text-sm text-gray-600">
-        <p>Seuls les administrateurs autorisés peuvent se connecter.</p>
+        <p>Seuls les comptes avec le rôle administrateur peuvent accéder au panneau.</p>
       </div>
     </Card>
   );

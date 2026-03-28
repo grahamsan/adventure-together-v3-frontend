@@ -13,16 +13,26 @@ export const reportsControllerCreate = async (payload: CreateReportDto): Promise
 /**
  * Report an experience
  */
-export const reportsControllerReportExperience = async (id: string): Promise<any> => {
-  const { data } = await api.post<any>(`/experiences/${id}/report`);
+export const reportsControllerReportExperience = async (
+  id: string,
+  motif?: string,
+): Promise<any> => {
+  const { data } = await api.post<any>(`/experiences/${id}/report`, {
+    motif: motif?.trim() || undefined,
+  });
   return data;
 };
 
 /**
  * Report a trip
  */
-export const reportsControllerReportTrip = async (id: string): Promise<any> => {
-  const { data } = await api.post<any>(`/trips/${id}/report`);
+export const reportsControllerReportTrip = async (
+  id: string,
+  motif?: string,
+): Promise<any> => {
+  const { data } = await api.post<any>(`/trips/${id}/report`, {
+    motif: motif?.trim() || undefined,
+  });
   return data;
 };
 

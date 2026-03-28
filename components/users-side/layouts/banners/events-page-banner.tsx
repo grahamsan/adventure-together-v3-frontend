@@ -4,16 +4,34 @@ import {
   CalendarArrowDown,
   CalendarArrowUp,
   CalendarClock,
-  CalendarCog,
   Plus,
 } from "lucide-react";
 import CreateEventForm from "../../forms/create-event-form";
 import { useState } from "react";
 import { useGetUserRole } from "@/api/app/hooks";
+import type { PeriodFilter } from "@/lib/period-filter";
+import { togglePeriodFilter } from "@/lib/period-filter";
+import { cn } from "@/lib/utils";
 
-export default function EventsPageBanner() {
+type EventsPageBannerProps = {
+  periodFilter?: PeriodFilter;
+  onPeriodFilterChange?: (next: PeriodFilter) => void;
+};
+
+export default function EventsPageBanner({
+  periodFilter = "none",
+  onPeriodFilterChange,
+}: EventsPageBannerProps) {
   const [open, setOpen] = useState(false);
   const { isOrganizer } = useGetUserRole();
+
+  const periodBtnClass = (active: boolean) =>
+    cn(
+      "flex gap-x-2 rounded-[10px]",
+      active
+        ? ""
+        : "bg-white hover:bg-white border-stone-200 text-foreground",
+    );
 
   return (
     <div className="relative mt-4 h-[30vh] w-full rounded-[18px] bg-[url('/images/event-cover.png')] bg-cover bg-center">
@@ -24,35 +42,44 @@ export default function EventsPageBanner() {
       >
         Expériences Touristiques
       </h1>
-      <div className="flex gap-x-3 justify-end w-full items-center absolute bottom-2 right-2 z-50">
+      <div className="flex gap-x-3 justify-end w-full items-center absolute bottom-2 right-2 z-50 flex-wrap">
         <Button
-          className="flex gap-x-2 bg-white rounded-[10px] hover:bg-white"
-          variant="outline"
+          type="button"
+          className={periodBtnClass(periodFilter === "imminent")}
+          variant={periodFilter === "imminent" ? "default" : "outline"}
+          onClick={() =>
+            onPeriodFilterChange?.(
+              togglePeriodFilter(periodFilter, "imminent"),
+            )
+          }
         >
           <CalendarClock className="w-4 h-4" />
           <p>Imminantes</p>
         </Button>
         <Button
-          className="flex gap-x-2 bg-white rounded-[10px] hover:bg-white"
-          variant="outline"
+          type="button"
+          className={periodBtnClass(periodFilter === "month")}
+          variant={periodFilter === "month" ? "default" : "outline"}
+          onClick={() =>
+            onPeriodFilterChange?.(togglePeriodFilter(periodFilter, "month"))
+          }
         >
           <CalendarArrowDown className="w-4 h-4" />
           <p>Ce mois-ci</p>
         </Button>
         <Button
-          className="flex gap-x-2 bg-white rounded-[10px] hover:bg-white"
-          variant="outline"
+          type="button"
+          className={periodBtnClass(periodFilter === "nextMonth")}
+          variant={periodFilter === "nextMonth" ? "default" : "outline"}
+          onClick={() =>
+            onPeriodFilterChange?.(
+              togglePeriodFilter(periodFilter, "nextMonth"),
+            )
+          }
         >
           <CalendarArrowUp className="w-4 h-4" />
           <p>Mois Prochain</p>
         </Button>
-        {/* <Button
-          className="flex gap-x-2 bg-white rounded-[10px] hover:bg-white"
-          variant="outline"
-        >
-          <CalendarCog className="w-4 h-4" />
-          <p>Filtrer par date</p>
-        </Button> */}
         {isOrganizer && (
           <Button
             className="flex gap-x-2 bg-brand-500 text-white rounded-[10px] hover:bg-brand-600"

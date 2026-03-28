@@ -38,7 +38,8 @@ export const useReportsControllerReportExperience = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (vars: { id: string }) => reportsControllerReportExperience(vars.id),
+    mutationFn: (vars: { id: string; motif?: string }) =>
+      reportsControllerReportExperience(vars.id, vars.motif),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.reports.all });
     },
@@ -49,7 +50,8 @@ export const useReportsControllerReportTrip = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (vars: { id: string }) => reportsControllerReportTrip(vars.id),
+    mutationFn: (vars: { id: string; motif?: string }) =>
+      reportsControllerReportTrip(vars.id, vars.motif),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.reports.all });
     },

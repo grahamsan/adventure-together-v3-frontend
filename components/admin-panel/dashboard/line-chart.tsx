@@ -43,8 +43,8 @@ export function LineChart({ title, subtitle, data }: LineChartProps) {
     ' Z';
   
   return (
-    <div className="bg-white rounded-2xl p-6 border border-gray-200">
-      <div className="mb-6">
+    <div className="bg-white rounded-2xl p-[1.05rem] border border-gray-200">
+      <div className="mb-[1.05rem]">
         <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
         <p className="text-sm text-gray-500">{subtitle}</p>
       </div>
@@ -96,7 +96,7 @@ export function LineChart({ title, subtitle, data }: LineChartProps) {
         </svg>
         
         {/* Labels */}
-        <div className="flex justify-between mt-4 px-2">
+        <div className="flex justify-between mt-[0.7rem] px-[0.35rem]">
           {data.map((item, index) => (
             <span key={index} className="text-xs font-medium text-gray-600">
               {item.label}

@@ -1,168 +1,81 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import {
-  Facebook,
-  Twitter,
-  Instagram,
-  Mail,
-  Phone,
-  MapPin,
-} from "lucide-react";
 
-const footerImages = [
-  "https://images.unsplash.com/photo-1523805009345-7448845a9e53?q=80&w=200&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1516426122078-c23e76319801?q=80&w=200&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1559827260-dc66d52bef19?q=80&w=200&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1589802829985-817e51171b92?q=80&w=200&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?q=80&w=200&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1516026672322-bc52d61a0490?q=80&w=200&auto=format&fit=crop",
+const destinations = ["Cotonou", "Ouidah", "Porto-Novo", "Pendjari"];
+const experienceTypes = ["Road trips", "Événements", "Covoiturage", "Lieux"];
+const support = [
+  { label: "Aide", href: "#" },
+  { label: "Confidentialité", href: "#" },
+  { label: "Conditions", href: "#" },
 ];
 
 export default function FooterSection() {
   return (
-    <footer className="bg-[[var(--BRAND-500)]] text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-          {/* Travel Column */}
+    <footer className="border-t border-black/5 bg-[var(--landing-muted-bg)]">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div>
-            <h3 className="font-bold text-xl mb-4">Voyage</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link href="/about" className="hover:underline">
-                  À propos
-                </Link>
-              </li>
-              <li>
-                <Link href="/packages" className="hover:underline">
-                  Forfaits
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:underline">
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link href="/blog" className="hover:underline">
-                  Blog
-                </Link>
-              </li>
-            </ul>
+            <p className="text-lg font-bold text-[var(--landing-primary)]">
+              Adventure Together
+            </p>
+            <p className="mt-4 text-sm leading-relaxed text-[#121212]/65">
+              La plateforme pour découvrir le Bénin entre voyageurs et
+              organisateurs.
+            </p>
           </div>
-
-          {/* Services Column */}
           <div>
-            <h3 className="font-bold text-xl mb-4">Services</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link href="/tours" className="hover:underline">
-                  Visites Guidées
-                </Link>
-              </li>
-              <li>
-                <Link href="/guides" className="hover:underline">
-                  Guides Locaux
-                </Link>
-              </li>
-              <li>
-                <Link href="/transport" className="hover:underline">
-                  Transport
-                </Link>
-              </li>
-              <li>
-                <Link href="/accommodation" className="hover:underline">
-                  Hébergement
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Interests Column */}
-          <div>
-            <h3 className="font-bold text-xl mb-4">Intérêts</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                "Plages",
-                "Culture",
-                "Faune",
-                "Histoire",
-                "Cuisine",
-                "Aventure",
-              ].map((interest) => (
-                <div
-                  key={interest}
-                  className="bg-white/20 rounded-lg px-3 py-2 text-sm text-center hover:bg-white/30 cursor-pointer transition-colors"
-                >
-                  {interest}
-                </div>
+            <h3 className="text-sm font-bold uppercase tracking-wide text-[#121212]/50">
+              Destinations
+            </h3>
+            <ul className="mt-4 space-y-3">
+              {destinations.map((d) => (
+                <li key={d}>
+                  <span className="text-sm text-[#121212]/80">{d}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
-
-          {/* Contact Column */}
           <div>
-            <h3 className="font-bold text-xl mb-4">Contact</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-2">
-                <Mail className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                <span className="text-sm">contact@adventuretogether.bj</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Phone className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                <span className="text-sm">+229 XX XX XX XX</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                <span className="text-sm">Cotonou, Benin</span>
+            <h3 className="text-sm font-bold uppercase tracking-wide text-[#121212]/50">
+              Expériences
+            </h3>
+            <ul className="mt-4 space-y-3">
+              {experienceTypes.map((d) => (
+                <li key={d}>
+                  <span className="text-sm text-[#121212]/80">{d}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-wide text-[#121212]/50">
+              Support
+            </h3>
+            <ul className="mt-4 space-y-3">
+              {support.map((item) => (
+                <li key={item.label}>
+                  <Link
+                    href={item.href}
+                    className="text-sm text-[#121212]/80 transition hover:text-[var(--landing-primary)]"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <Link
+                  href="/login"
+                  className="text-sm text-[#121212]/80 transition hover:text-[var(--landing-primary)]"
+                >
+                  Connexion
+                </Link>
               </li>
             </ul>
-
-            {/* Social Media */}
-            <div className="flex gap-3 mt-6">
-              <a
-                href="#"
-                className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
-              >
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
-              >
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-            </div>
           </div>
         </div>
-
-        {/* Gallery */}
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-8">
-          {footerImages.map((img, idx) => (
-            <div
-              key={idx}
-              className="relative aspect-square rounded-lg overflow-hidden"
-            >
-              <Image
-                src={img}
-                alt={`Gallery ${idx + 1}`}
-                fill
-                className="object-cover hover:scale-110 transition-transform duration-300"
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Copyright */}
-        <div className="border-t border-white/20 pt-8 text-center text-sm">
-          <p>© 2024 Adventure Together. Tous droits réservés.</p>
+        <div className="mt-14 border-t border-black/10 pt-8 text-center text-sm text-[#121212]/50">
+          © {new Date().getFullYear()} Adventure Together. Tous droits réservés.
         </div>
       </div>
     </footer>

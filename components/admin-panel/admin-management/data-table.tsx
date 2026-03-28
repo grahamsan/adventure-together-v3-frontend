@@ -57,9 +57,9 @@ export function AdminsDataTable<TData extends Admin, TValue>({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-[0.7rem]">
       {/* Search Bar */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-[0.7rem]">
         <Input
           placeholder="Rechercher par nom..."
           value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
@@ -77,7 +77,7 @@ export function AdminsDataTable<TData extends Admin, TValue>({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="bg-gray-50">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="py-4">
+                  <TableHead key={header.id} className="py-[0.7rem]">
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -97,7 +97,7 @@ export function AdminsDataTable<TData extends Admin, TValue>({
                   className="hover:bg-gray-50 transition-colors"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="py-4">
+                    <TableCell key={cell.id} className="py-[0.7rem]">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -121,12 +121,12 @@ export function AdminsDataTable<TData extends Admin, TValue>({
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between px-2">
+      <div className="flex items-center justify-between px-[0.35rem]">
         <div className="text-sm text-gray-600">
           Page {table.getState().pagination.pageIndex + 1} sur{" "}
           {table.getPageCount()}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-[0.35rem]">
           <Button
             variant="outline"
             size="sm"

@@ -1,6 +1,7 @@
 // Auto-generated API functions
 import api from '@/lib/axios';
 import type { CreatePlaceDto, UpdatePlaceDto } from './types';
+import type { Experience } from '@/api/experiences/types';
 
 /**
  * Créer un nouveau lieu
@@ -23,6 +24,16 @@ export const placesControllerFindAll = async (params?: { search?: string; type?:
  */
 export const placesControllerGetFavorites = async (): Promise<any> => {
   const { data } = await api.get<any>(`/places/favorites`);
+  return data;
+};
+
+/**
+ * Expériences liées à un lieu
+ */
+export const placesControllerFindExperiencesByPlaceId = async (
+  id: string,
+): Promise<Experience[]> => {
+  const { data } = await api.get<Experience[]>(`/places/${id}/experiences`);
   return data;
 };
 

@@ -15,11 +15,15 @@ export interface CreateTripDto {
 
   seatsAvailable: number;
 
-  associatedEventTitle: string;
+  associatedEventTitle?: string;
 
-  escales: string[];
+  escales?: string[];
 
-  associatedVehicle: string;
+  associatedVehicle?: string;
+
+  experienceId?: string;
+
+  placeId?: string;
 }
 
 export interface ApplyToTripDto {
@@ -42,6 +46,10 @@ export interface Trip {
   relatedExpName: string;
   relatedPlaceName: string;
   hasApplied: boolean;
+  ownerId: string;
+  applicationsCount: number;
+  /** Présent sur GET /trips/me */
+  isPassed?: boolean;
   driverName: string;
   vehicleModel: string;
   creator: TripCreator;
@@ -72,12 +80,14 @@ export interface ApplyDecisionDto {
 }
 
 export interface FindAllQueryParams {
-  search: string;
-  date: string;
-  from: string;
-  to: string;
-  experienceId: string;
-  imminent: boolean;
-  month: boolean;
-  nextMonth: boolean;
+  search?: string;
+  date?: string;
+  from?: string;
+  to?: string;
+  experienceId?: string;
+  imminent?: boolean;
+  month?: boolean;
+  nextMonth?: boolean;
+  page?: number;
+  limit?: number;
 }

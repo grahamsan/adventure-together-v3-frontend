@@ -32,8 +32,11 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { SearchableSelect } from "@/components/shared/searchable-select";
-import { useState } from "react";
-import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { useEffect, useRef, useState } from "react";
+import { format, isAfter, isBefore, startOfDay } from "date-fns";
+import { formatRelativeDate } from "@/utils/format-relative-date";
 import {
   DndContext,
   closestCenter,
@@ -92,16 +95,42 @@ function SortableEscaleCard({ id, value }: { id: string; value: string }) {
   );
 }
 
+/** Ouverture depuis le drawer « trajets d’une expérience » : arrivée, expérience et borne date max. */
+export type CreateTripExperienceContext = {
+  experienceId: string;
+  eventLocation: string;
+  eventStartAt: Date;
+};
+
 export interface CreateTripFormProps {
   open?: boolean;
   onClose?: () => void;
+  experienceContext?: CreateTripExperienceContext;
+  /** Ouvre uniquement via `open` (pas de bouton + dans le dialogue). */
+  hideTrigger?: boolean;
 }
 
-export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
+function defaultStartDateWithinEvent(eventStart: Date): Date {
+  const eventDay = startOfDay(eventStart);
+  const today = startOfDay(new Date());
+  if (isAfter(today, eventDay)) return eventDay;
+  return today;
+}
+
+export default function CreateTripForm({
+  open,
+  onClose,
+  experienceContext,
+  hideTrigger = false,
+}: CreateTripFormProps) {
   const [step, setStep] = useState(1);
   const [escales, setEscales] = useState<string[]>([]);
   const [escaleInput, setEscaleInput] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const prevDialogOpenRef = useRef(false);
+
+  const dialogOpen = open !== undefined ? open : isOpen;
 
   // Hooks for fetching options
   const { data: experiencesData } = useExperiencesControllerFindAll();
@@ -161,6 +190,29 @@ export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
 
   const createTripMutation = useTripsControllerCreate();
 
+  useEffect(() => {
+    const justOpened = dialogOpen && !prevDialogOpenRef.current;
+    prevDialogOpenRef.current = dialogOpen;
+    if (!justOpened || !experienceContext) return;
+
+    form.reset({
+      from: "",
+      to: experienceContext.eventLocation,
+      startDate: defaultStartDateWithinEvent(experienceContext.eventStartAt),
+      startHour: "",
+      tripDescription: "",
+      price: 0,
+      seatsAvailable: 1,
+      experienceId: experienceContext.experienceId,
+      placeId: "",
+      associatedVehicle: "",
+      escales: [],
+    });
+    setEscales([]);
+    setStep(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset ciblé à l’ouverture du dialogue
+  }, [dialogOpen, experienceContext]);
+
   const onSubmit = async (values: TripFormValues) => {
     const payload = {
       from: values.from,
@@ -179,6 +231,10 @@ export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
     createTripMutation.mutate(payload as any, {
       onSuccess: () => {
         toast.success("Trajet créé avec succès !");
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.experiences.trip(values.experienceId),
+        });
+        queryClient.invalidateQueries({ queryKey: queryKeys.experiences.all });
         setIsOpen(false);
         if (onClose) onClose();
         form.reset();
@@ -192,9 +248,20 @@ export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
     });
   };
 
+  const calendarDisabled = (date: Date) => {
+    const d = startOfDay(date);
+    const today = startOfDay(new Date());
+    if (isBefore(d, today)) return true;
+    if (experienceContext) {
+      const maxDay = startOfDay(experienceContext.eventStartAt);
+      if (isAfter(d, maxDay)) return true;
+    }
+    return false;
+  };
+
   return (
     <Dialog
-      open={open !== undefined ? open : isOpen}
+      open={dialogOpen}
       onOpenChange={(isOpenNew) => {
         if (!isOpenNew) {
           form.reset();
@@ -202,14 +269,16 @@ export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
           setStep(1);
         }
         if (onClose && !isOpenNew) onClose();
-        setIsOpen(isOpenNew);
+        if (open === undefined) setIsOpen(isOpenNew);
       }}
     >
-      <DialogTrigger asChild>
-        <Button className="w-10 h-10">
-          <Plus className="w-5 h-5" />
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button className="h-10 w-10">
+            <Plus className="h-5 w-5" />
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Créer un voyage</DialogTitle>
@@ -239,7 +308,11 @@ export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Arrivée</FormLabel>
-                      <Input {...field} placeholder="Destination" />
+                      <Input
+                        {...field}
+                        placeholder="Destination"
+                        disabled={Boolean(experienceContext)}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -302,7 +375,7 @@ export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
                             <div className="flex gap-x-2 items-center font-semibold w-full justify-start text-left bg-stone-100 text-stone-500 p-2 rounded-lg cursor-pointer">
                               <Calendar1 className="h-4 w-4" />
                               {field.value
-                                ? format(field.value, "PPP")
+                                ? formatRelativeDate(field.value)
                                 : "Sélectionner une date"}
                             </div>
                           </PopoverTrigger>
@@ -311,7 +384,7 @@ export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
-                              disabled={(date) => date < new Date()}
+                              disabled={calendarDisabled}
                             />
                           </PopoverContent>
                         </Popover>
@@ -343,7 +416,7 @@ export default function CreateTripForm({ open, onClose }: CreateTripFormProps) {
                         placeholder="Rechercher une expérience..."
                         value={field.value}
                         onValueChange={field.onChange}
-                        disabled={false}
+                        disabled={Boolean(experienceContext)}
                       />
                       <FormMessage />
                     </FormItem>

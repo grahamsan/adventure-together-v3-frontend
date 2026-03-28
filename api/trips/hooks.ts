@@ -3,8 +3,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import {
   tripsControllerFindAll,
+  tripsControllerFindMine,
   tripsControllerCreate,
   tripsControllerApply,
+  tripsControllerAcknowledgeTripCompletion,
   tripsControllerFindOne,
   tripsControllerUpdate,
   tripsControllerRemove,
@@ -19,6 +21,7 @@ import type {
   ApplyToTripDto,
   ApplyDecisionDto,
   FindAllQueryParams,
+  TripStatus,
 } from "./types";
 
 // Query Hooks
@@ -28,13 +31,20 @@ export const useTripsControllerFindAll = (
 ) => {
   const cleanedParams = Object.fromEntries(
     Object.entries(params ?? {}).filter(
-      ([_, value]) => value !== undefined && value !== false && value !== "",
+      ([, value]) => value !== undefined && value !== false && value !== "",
     ),
-  );
+  ) as Partial<FindAllQueryParams>;
 
   return useQuery({
-    queryKey: ["trips", cleanedParams],
+    queryKey: queryKeys.trips.list(cleanedParams),
     queryFn: () => tripsControllerFindAll(cleanedParams),
+  });
+};
+
+export const useTripsControllerFindMine = () => {
+  return useQuery({
+    queryKey: queryKeys.trips.mine(),
+    queryFn: () => tripsControllerFindMine(),
   });
 };
 
@@ -79,13 +89,31 @@ export const useTripsControllerApply = () => {
   });
 };
 
+export const useTripsControllerAcknowledgeTripCompletion = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (tripId: string) =>
+      tripsControllerAcknowledgeTripCompletion(tripId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.trips.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all });
+    },
+  });
+};
+
 export const useTripsControllerUpdate = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (vars: { id: string }) => tripsControllerUpdate(vars.id),
+    mutationFn: (vars: {
+      id: string;
+      payload: Partial<CreateTripDto>;
+    }) => tripsControllerUpdate(vars.id, vars.payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.trips.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.experiences.all });
     },
   });
 };
@@ -97,6 +125,7 @@ export const useTripsControllerRemove = () => {
     mutationFn: (vars: { id: string }) => tripsControllerRemove(vars.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.trips.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.experiences.all });
     },
   });
 };
@@ -139,9 +168,13 @@ export const useTripsControllerUpdateStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (vars: { id: string }) => tripsControllerUpdateStatus(vars.id),
+    mutationFn: (vars: { id: string; status: TripStatus }) =>
+      tripsControllerUpdateStatus(vars.id, vars.status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.trips.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.experiences.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
     },
   });
 };

@@ -1,18 +1,13 @@
-// users-types.ts
-export type UserRole = 'user' | 'admin';
-export type UserStatus = 'active' | 'banned';
-export type UserFilterType = 'all' | 'user' | 'admin';
+export type AdminUserStatus = "active" | "disabled";
 
-export interface User {
+/** Aligné sur `UserManagementResponseDto` du backend */
+export interface AdminUserRow {
   id: string;
   name: string;
   email: string;
-  role: UserRole;
+  role: string;
   registrationDate: string;
-  status: UserStatus;
+  status: AdminUserStatus;
 }
 
-export interface UserFilters {
-  search: string;
-  filterType: UserFilterType;
-}
+export type UserFilterType = "all" | "user" | "admin";

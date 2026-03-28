@@ -6,6 +6,7 @@ import type {
   Trip,
   ApplyDecisionDto,
   FindAllQueryParams,
+  TripStatus,
 } from "./types";
 
 /**
@@ -18,6 +19,14 @@ export const tripsControllerFindAll = async (
     params,
   });
 
+  return data;
+};
+
+/**
+ * Trajets créés par l'utilisateur connecté (avec isPassed)
+ */
+export const tripsControllerFindMine = async (): Promise<Trip[]> => {
+  const { data } = await api.get<Trip[]>("/trips/me");
   return data;
 };
 
@@ -43,6 +52,19 @@ export const tripsControllerApply = async (
 };
 
 /**
+ * Accuser réception du voyage marqué comme effectué (candidat)
+ */
+export const tripsControllerAcknowledgeTripCompletion = async (
+  tripId: string,
+): Promise<{ ok: boolean }> => {
+  const { data } = await api.post<{ statusCode?: number; data?: { ok: boolean } }>(
+    `/trips/${tripId}/ack-completion`,
+  );
+  const body = data as { statusCode?: number; data?: { ok: boolean }; ok?: boolean };
+  return (body?.data ?? body) as { ok: boolean };
+};
+
+/**
  * Get trip details
  */
 export const tripsControllerFindOne = async (id: string): Promise<Trip> => {
@@ -51,10 +73,13 @@ export const tripsControllerFindOne = async (id: string): Promise<Trip> => {
 };
 
 /**
- * Update a trip (Owner only)
+ * Update a trip (Owner only, no applications yet)
  */
-export const tripsControllerUpdate = async (id: string): Promise<any> => {
-  const { data } = await api.patch<any>(`/trips/${id}`);
+export const tripsControllerUpdate = async (
+  id: string,
+  payload: Partial<CreateTripDto>,
+): Promise<Trip> => {
+  const { data } = await api.patch<Trip>(`/trips/${id}`, payload);
   return data;
 };
 
@@ -111,7 +136,10 @@ export const tripsControllerDecision = async (
 /**
  * Update trip status (Driver only)
  */
-export const tripsControllerUpdateStatus = async (id: string): Promise<any> => {
-  const { data } = await api.patch<any>(`/trips/${id}/status`);
+export const tripsControllerUpdateStatus = async (
+  id: string,
+  status: TripStatus,
+): Promise<any> => {
+  const { data } = await api.patch<any>(`/trips/${id}/status`, { status });
   return data;
 };

@@ -289,3 +289,39 @@
   -ms-overflow-style: none; /* IE et Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+@keyframes bell-shake {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  15% {
+    transform: rotate(-14deg);
+  }
+  30% {
+    transform: rotate(12deg);
+  }
+  45% {
+    transform: rotate(-10deg);
+  }
+  60% {
+    transform: rotate(8deg);
+  }
+  75% {
+    transform: rotate(-4deg);
+  }
+}
+.animate-bell-shake {
+  animation: bell-shake 0.65s ease-in-out;
+}
+
+/* Landing page (marketing) — aligné sur la charte mockup */
+.landing-root {
+  --landing-primary: #c84c2d;
+  --landing-primary-hover: #a83d24;
+  --landing-bg: #ffffff;
+  --landing-charcoal: #121212;
+  --landing-muted-bg: #f2f5f9;
+  --landing-mint: #a9f1d1;
+  --landing-lavender: #e8ebf7;
+}

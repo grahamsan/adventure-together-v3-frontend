@@ -155,7 +155,16 @@ export default function TripsDetails({
                 <h3 className="text-sm font-semibold text-gray-700 mb-2">
                   Escales
                 </h3>
-                <div className="flex flex-wrap gap-2">{excales}</div>
+                <div className="flex flex-wrap gap-2">
+                  {excales.map((e, i) => (
+                    <span
+                      key={`${e}-${i}`}
+                      className="rounded-md bg-gray-100 px-2 py-1 text-sm text-gray-800"
+                    >
+                      {e}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
             <div className="flex flex-col gap-y-2 w-full">

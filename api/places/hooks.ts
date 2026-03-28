@@ -5,6 +5,7 @@ import {
   placesControllerCreate,
   placesControllerFindAll,
   placesControllerGetFavorites,
+  placesControllerFindExperiencesByPlaceId,
   placesControllerFindOne,
   placesControllerUpdate,
   placesControllerRemove,
@@ -34,6 +35,14 @@ export const usePlacesControllerFindOne = (id: string) => {
     queryKey: queryKeys.places.detail(id),
     queryFn: () => placesControllerFindOne(id),
     enabled: !!(id),
+  });
+};
+
+export const usePlacesControllerFindExperiencesByPlaceId = (placeId: string) => {
+  return useQuery({
+    queryKey: queryKeys.places.experiences(placeId),
+    queryFn: () => placesControllerFindExperiencesByPlaceId(placeId),
+    enabled: Boolean(placeId),
   });
 };
 

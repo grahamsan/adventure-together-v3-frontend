@@ -1,19 +1,12 @@
-// notification-types.ts
-export type NotificationType = 'alerte' | 'rappel' | 'info';
+import type { NotificationDto } from "@/api/notifications/types";
 
-export interface Notification {
-  id: string;
-  type: NotificationType;
-  title: string;
-  description: string;
-  timestamp: string;
-  isRead: boolean;
-  tripId?: string;
-  experienceId?: string;
-}
+/** Alias aligné sur le DTO backend */
+export type Notification = NotificationDto;
+
+export type NotificationBackendType = "trip" | "message" | "reminder";
 
 export interface NotificationFilters {
-  type: NotificationType | null;
+  type: NotificationBackendType | null;
   experience: string;
   trip: string;
 }
