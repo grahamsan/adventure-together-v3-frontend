@@ -52,4 +52,6 @@ export interface Comment {
   dislikesCount: number;
   createdAt: string;
   updatedAt: string;
+  /** Présent si l’API renvoie une liste plate : les réponses ont un parent. */
+  parentId?: string | null;
 }

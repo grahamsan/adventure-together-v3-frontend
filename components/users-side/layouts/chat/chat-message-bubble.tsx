@@ -47,6 +47,11 @@ export default function MessageBubble({
 
   const imageUrl = getImageUrl();
 
+  /** Placeholder côté client quand seul un fichier est envoyé sans légende (voir chat-input). */
+  const hideTextAsFilePlaceholder =
+    hasAttachments &&
+    message.content.trim().toLowerCase() === "isfile";
+
   return (
     <div
       className={`rounded-lg px-3 py-2 w-full ${
@@ -96,7 +101,7 @@ export default function MessageBubble({
       )}
 
       {/* Type: Text - Affichage du contenu texte */}
-      {message.content && (
+      {message.content && !hideTextAsFilePlaceholder && (
         <p className="text-sm whitespace-pre-wrap break-words">
           {message.content}
         </p>

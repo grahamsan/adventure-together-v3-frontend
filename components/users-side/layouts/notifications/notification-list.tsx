@@ -187,8 +187,11 @@ const NotificationCard = ({
 
 export default function NotificationList({
   variant = "default",
+  onMessageNotificationNavigate,
 }: {
   variant?: "default" | "sheet";
+  /** Notification « message » : fermer les notifs et ouvrir le chat sur cette conversation. */
+  onMessageNotificationNavigate?: (conversationId: string) => void;
 }) {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
@@ -240,6 +243,13 @@ export default function NotificationList({
   const handleCardOpen = (n: NotificationDto) => {
     if (!n.isRead) {
       markAsRead(n.id);
+    }
+    if (
+      n.type === "message" &&
+      typeof n.meta?.conversationId === "string" &&
+      onMessageNotificationNavigate
+    ) {
+      onMessageNotificationNavigate(n.meta.conversationId);
     }
   };
 

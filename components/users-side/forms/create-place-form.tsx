@@ -134,7 +134,7 @@ export default function CreatePlaceForm({
         setIsOpen(v);
       }}
     >
-      <DialogContent className="w-[60vw] max-w-[60vw] h-[80vh] overflow-y-auto">
+      <DialogContent className="w-[98vw] lg:w-[60vw] lg:max-w-[60vw] h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Créer un lieu</DialogTitle>
         </DialogHeader>

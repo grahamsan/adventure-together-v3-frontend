@@ -14,6 +14,16 @@ import {
   BENTO_GRID_COLUMNS,
   computeBentoPlacements,
 } from "@/lib/bento-grid-layout";
+import PlaceDetailsSheet from "@/components/shared/drawers/place-details-sheet";
+import PlaceEventsSheet from "@/components/shared/drawers/place-events-sheet";
+import ExperienceDetailDialog from "@/components/shared/experience-detail-dialog";
+import type { Experience } from "@/api/experiences/types";
+import type { PlaceListItem } from "@/components/shared/place-bento-card";
+
+type PlaceSheetFlow =
+  | { kind: "idle" }
+  | { kind: "details"; id: string; title: string }
+  | { kind: "events"; id: string; title: string };
 
 const BANNER_TRANSITION = {
   duration: 0.85,
@@ -23,7 +33,18 @@ const BANNER_TRANSITION = {
 export default function PlacesPage() {
   const [categoryFilter, setCategoryFilter] =
     useState<PlacesCategoryFilter>("all");
+  const [placeFlow, setPlaceFlow] = useState<PlaceSheetFlow>({ kind: "idle" });
+  const [dialogExperience, setDialogExperience] = useState<Experience | null>(
+    null,
+  );
+  const [dialogOpen, setDialogOpen] = useState(false);
   const isMd = useMediaQuery("(min-width: 768px)");
+
+  const openPlaceDetails = (place: PlaceListItem) => {
+    setPlaceFlow({ kind: "details", id: place.id, title: place.title });
+  };
+
+  const closePlaceSheets = () => setPlaceFlow({ kind: "idle" });
 
   const queryParams = useMemo(
     () => placesFilterToQuery(categoryFilter),
@@ -50,6 +71,7 @@ export default function PlacesPage() {
   );
 
   return (
+    <>
     <div className="flex min-h-0 w-full flex-1 flex-col gap-2 overflow-hidden px-2 md:flex-row md:gap-3 md:px-4">
       <motion.aside
         className="flex shrink-0 flex-col overflow-hidden md:h-full md:min-h-0"
@@ -94,6 +116,7 @@ export default function PlacesPage() {
                     place={place}
                     gridStyle={isMd ? gridPlacements[index] : undefined}
                     motionIndex={index}
+                    onOpen={openPlaceDetails}
                   />
                 ))}
               </div>
@@ -102,5 +125,45 @@ export default function PlacesPage() {
         )}
       </div>
     </div>
+
+    <PlaceDetailsSheet
+      open={placeFlow.kind === "details"}
+      onOpenChange={(o) => {
+        if (!o) closePlaceSheets();
+      }}
+      placeId={placeFlow.kind === "details" ? placeFlow.id : null}
+      onShowAssociatedEvents={() => {
+        if (placeFlow.kind === "details") {
+          setPlaceFlow({
+            kind: "events",
+            id: placeFlow.id,
+            title: placeFlow.title,
+          });
+        }
+      }}
+    />
+
+    <PlaceEventsSheet
+      open={placeFlow.kind === "events"}
+      onOpenChange={(o) => {
+        if (!o) closePlaceSheets();
+      }}
+      placeId={placeFlow.kind === "events" ? placeFlow.id : null}
+      placeTitle={placeFlow.kind === "events" ? placeFlow.title : ""}
+      onOpenExperienceDetail={(exp) => {
+        setDialogExperience(exp);
+        setDialogOpen(true);
+      }}
+    />
+
+    <ExperienceDetailDialog
+      experience={dialogExperience}
+      open={dialogOpen}
+      onOpenChange={(o) => {
+        setDialogOpen(o);
+        if (!o) setDialogExperience(null);
+      }}
+    />
+    </>
   );
 }

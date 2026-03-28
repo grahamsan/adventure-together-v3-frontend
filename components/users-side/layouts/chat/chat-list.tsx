@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Search, MapPin, MessageCircle, Loader2 } from "lucide-react";
 import Chat from "./chat-component";
 import { useConversationsControllerFindAll } from "@/api/conversations/hooks";
@@ -136,7 +136,14 @@ const ChatCard: React.FC<ChatCardProps> = ({
 };
 
 // Composant principal
-export default function ChatList() {
+export default function ChatList({
+  initialConversationId = null,
+  onInitialConversationConsumed,
+}: {
+  /** Ouvre directement cette conversation (ex. depuis une notification « nouveau message »). */
+  initialConversationId?: string | null;
+  onInitialConversationConsumed?: () => void;
+} = {}) {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedChat, setSelectedChat] = useState<{
     id: string;
@@ -150,6 +157,35 @@ export default function ChatList() {
   const { data: conversations, isLoading: isLoadingConversations } =
     useConversationsControllerFindAll();
   const { data: currentUser } = useUserControllerGetMe();
+
+  useEffect(() => {
+    if (!initialConversationId) return;
+    if (isLoadingConversations) return;
+    if (!conversations) {
+      onInitialConversationConsumed?.();
+      return;
+    }
+    const chat = conversations.find((c) => c.id === initialConversationId);
+    if (chat) {
+      setSelectedChat({
+        id: chat.id,
+        name:
+          chat.type === "user2user"
+            ? chat.destinataireName ?? "Conversation"
+            : chat.name || "Conversation",
+        tripName: chat?.name,
+        tripId: chat.tripId || "",
+        applyId: chat.applyId || "",
+        applyStatus: chat.applyStatus || "",
+      });
+    }
+    onInitialConversationConsumed?.();
+  }, [
+    initialConversationId,
+    conversations,
+    isLoadingConversations,
+    onInitialConversationConsumed,
+  ]);
 
   const filteredConversations = useMemo(() => {
     if (!conversations) return [];

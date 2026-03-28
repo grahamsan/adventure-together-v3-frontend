@@ -1,6 +1,6 @@
 // Auto-generated API functions
 import api from '@/lib/axios';
-import type { CreatePlaceDto, UpdatePlaceDto } from './types';
+import type { CreatePlaceDto, UpdatePlaceDto, PlaceDetail } from './types';
 import type { Experience } from '@/api/experiences/types';
 
 /**
@@ -40,8 +40,8 @@ export const placesControllerFindExperiencesByPlaceId = async (
 /**
  * Détails d'un lieu
  */
-export const placesControllerFindOne = async (id: string): Promise<any> => {
-  const { data } = await api.get<any>(`/places/${id}`);
+export const placesControllerFindOne = async (id: string): Promise<PlaceDetail> => {
+  const { data } = await api.get<PlaceDetail>(`/places/${id}`);
   return data;
 };
 

@@ -17,6 +17,8 @@ export interface NotificationMeta {
   ownerId?: string;
   tripStatus?: string;
   accepted?: boolean;
+  conversationId?: string;
+  senderId?: string;
   [key: string]: unknown;
 }
 

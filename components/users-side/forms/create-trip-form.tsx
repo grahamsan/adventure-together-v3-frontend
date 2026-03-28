@@ -32,6 +32,7 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { SearchableSelect } from "@/components/shared/searchable-select";
+import PlaceLocationInput from "@/components/shared/place-location-input";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { useEffect, useRef, useState } from "react";
@@ -61,7 +62,8 @@ const tripSchema = z.object({
   tripDescription: z.string().min(2, "La description est requise"),
   price: z.coerce.number().min(1, "Le prix est requis"),
   seatsAvailable: z.coerce.number().min(1, "Le nombre de places est requis"),
-  experienceId: z.string().min(1, "Veuillez sélectionner une expérience"),
+  /** Optionnel côté API : trajet sans expérience liée. */
+  experienceId: z.string().optional(),
   placeId: z.string().optional(),
   escales: z.array(z.string()),
   associatedVehicle: z.string().min(1, "Veuillez sélectionner un véhicule"),
@@ -138,11 +140,18 @@ export default function CreateTripForm({
 
   // Map to SearchableSelect items
   const experienceOptions =
-    experiencesData?.data?.map((exp: any) => ({
-      value: exp.id,
-      label: exp.title,
-      searchKey: exp.title,
-    })) || [];
+    [
+      {
+        value: "",
+        label: "Aucune expérience (trajet autonome)",
+        searchKey: "aucune autonome",
+      },
+      ...(experiencesData?.data?.map((exp: any) => ({
+        value: exp.id,
+        label: exp.title,
+        searchKey: exp.title,
+      })) || []),
+    ];
 
   const vehicleOptions =
     vehiclesData?.map((veh: any) => ({
@@ -222,7 +231,9 @@ export default function CreateTripForm({
       tripDescription: values.tripDescription,
       price: Number(values.price),
       seatsAvailable: Number(values.seatsAvailable),
-      experienceId: values.experienceId,
+      ...(values.experienceId?.trim()
+        ? { experienceId: values.experienceId.trim() }
+        : {}),
       placeId: values.placeId || undefined, // Optional
       escales: escales,
       associatedVehicle: values.associatedVehicle,
@@ -231,9 +242,11 @@ export default function CreateTripForm({
     createTripMutation.mutate(payload as any, {
       onSuccess: () => {
         toast.success("Trajet créé avec succès !");
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.experiences.trip(values.experienceId),
-        });
+        if (values.experienceId?.trim()) {
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.experiences.trip(values.experienceId.trim()),
+          });
+        }
         queryClient.invalidateQueries({ queryKey: queryKeys.experiences.all });
         setIsOpen(false);
         if (onClose) onClose();
@@ -297,7 +310,12 @@ export default function CreateTripForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Départ</FormLabel>
-                      <Input {...field} placeholder="Lieu de départ" />
+                      <PlaceLocationInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Lieu de départ (saisie libre ou lieu plateforme)"
+                        id={field.name}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -308,10 +326,12 @@ export default function CreateTripForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Arrivée</FormLabel>
-                      <Input
-                        {...field}
+                      <PlaceLocationInput
+                        value={field.value}
+                        onChange={field.onChange}
                         placeholder="Destination"
                         disabled={Boolean(experienceContext)}
+                        id={field.name}
                       />
                       <FormMessage />
                     </FormItem>
@@ -411,10 +431,14 @@ export default function CreateTripForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Expérience associée</FormLabel>
+                      <p className="mb-1 text-xs text-muted-foreground">
+                        Optionnel : liez le trajet à un événement ou laissez un
+                        trajet autonome.
+                      </p>
                       <SearchableSelect
                         items={experienceOptions}
                         placeholder="Rechercher une expérience..."
-                        value={field.value}
+                        value={field.value ?? ""}
                         onValueChange={field.onChange}
                         disabled={Boolean(experienceContext)}
                       />

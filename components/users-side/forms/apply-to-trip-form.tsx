@@ -26,10 +26,7 @@ import { useTripsControllerApply } from "@/api/trips/hooks";
 import toast from "react-hot-toast";
 
 const applyToTripSchema = z.object({
-  message: z
-    .string()
-    .min(1, "Veuillez entrer un message")
-    .max(1000, "Le message est trop long"),
+  message: z.string().max(1000, "Le message est trop long"),
   requestedSeats: z.coerce
     .number()
     .min(1, "Au moins 1 place")
@@ -61,7 +58,7 @@ export default function ApplyToTripForm({
     applyMutation.mutate(
       {
         id: tripId,
-        message: values.message,
+        message: values.message?.trim() || undefined,
         requestedSeats: values.requestedSeats,
       },
       {
@@ -130,9 +127,9 @@ export default function ApplyToTripForm({
               name="message"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Votre message</FormLabel>
+                  <FormLabel>Message de motivation (optionnel)</FormLabel>
                   <Textarea
-                    placeholder="Petit message pour vous introduire chez l'auteur de l'annonce..."
+                    placeholder="Sinon, un texte sera proposé automatiquement dans la conversation avec le conducteur."
                     className="min-h-28 rounded-md mt-2"
                     {...field}
                   />

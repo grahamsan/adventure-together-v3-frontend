@@ -8,13 +8,15 @@ export const createTripDtoSchema = z.object({
   tripDescription: z.string(),
   price: z.number(),
   seatsAvailable: z.number(),
-  associatedEventTitle: z.string(),
-  escales: z.array(z.string()),
-  associatedVehicle: z.string(),
+  associatedEventTitle: z.string().optional(),
+  escales: z.array(z.string()).optional(),
+  associatedVehicle: z.string().optional(),
+  experienceId: z.string().uuid().optional(),
+  placeId: z.string().uuid().optional(),
 });
 
 export const applyToTripDtoSchema = z.object({
-  message: z.string(),
+  message: z.string().optional(),
   requestedSeats: z.number(),
 });
 

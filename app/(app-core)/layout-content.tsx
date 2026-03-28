@@ -21,6 +21,22 @@ export default function LayoutContent({ children }: { children: ReactNode }) {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [bellShake, setBellShake] = useState(false);
+  const [chatInitialConversationId, setChatInitialConversationId] = useState<
+    string | null
+  >(null);
+
+  const handleMessageNotificationNavigate = useCallback(
+    (conversationId: string) => {
+      setIsNotifOpen(false);
+      setChatInitialConversationId(conversationId);
+      setIsChatOpen(true);
+    },
+    [],
+  );
+
+  const handleChatInitialConsumed = useCallback(() => {
+    setChatInitialConversationId(null);
+  }, []);
 
   const { data: notifPage } = useNotificationsControllerFindAll(
     { page: 1, limit: 100 },
@@ -107,7 +123,10 @@ export default function LayoutContent({ children }: { children: ReactNode }) {
           <SheetContent
             className="p-0 w-full md:w-[50vw] lg:w-[40vw] max-md:h-full max-md:min-h-0 max-md:rounded-none max-md:mr-0 h-[98vh] my-auto md:mr-4 md:rounded-[24px] flex flex-col min-h-0"
           >
-            <NotificationList variant="sheet" />
+            <NotificationList
+              variant="sheet"
+              onMessageNotificationNavigate={handleMessageNotificationNavigate}
+            />
           </SheetContent>
         </Sheet>
 
@@ -115,7 +134,10 @@ export default function LayoutContent({ children }: { children: ReactNode }) {
           <SheetContent
             className="p-0 w-full md:w-[50vw] lg:w-[40vw] max-md:h-full max-md:min-h-0 max-md:rounded-none max-md:mr-0 h-[98vh] my-auto md:mr-4 md:rounded-[24px] flex flex-col min-h-0"
           >
-            <ChatList />
+            <ChatList
+              initialConversationId={chatInitialConversationId}
+              onInitialConversationConsumed={handleChatInitialConsumed}
+            />
           </SheetContent>
         </Sheet>
       </main>

@@ -28,6 +28,8 @@ type PlaceBentoCardProps = {
   gridStyle?: CSSProperties;
   /** Délai d’apparition en cascade. */
   motionIndex?: number;
+  /** Clic sur la carte (détails lieu). */
+  onOpen?: (place: PlaceListItem) => void;
 };
 
 const FALLBACK_IMG = "/images/hills-1.jpg";
@@ -36,13 +38,25 @@ export default function PlaceBentoCard({
   place,
   gridStyle,
   motionIndex = 0,
+  onOpen,
 }: PlaceBentoCardProps) {
   const src = place.imageUrl?.trim() || FALLBACK_IMG;
 
   return (
     <motion.article
+      role={onOpen ? "button" : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      onClick={() => onOpen?.(place)}
+      onKeyDown={(e) => {
+        if (!onOpen) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen(place);
+        }
+      }}
       className={cn(
-        "group relative w-full min-h-0 cursor-pointer",
+        "group relative w-full min-h-0",
+        onOpen && "cursor-pointer",
         "max-md:min-h-[min(58vh,392px)]",
       )}
       style={gridStyle}
@@ -88,6 +102,7 @@ export default function PlaceBentoCard({
           type="button"
           className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 backdrop-blur-md transition hover:bg-white/25 md:right-4 md:top-4"
           aria-label="Favori"
+          onClick={(e) => e.stopPropagation()}
         >
           <Bookmark className="h-5 w-5 text-white" />
         </button>

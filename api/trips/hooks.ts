@@ -85,6 +85,7 @@ export const useTripsControllerApply = () => {
       tripsControllerApply(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.trips.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all });
     },
   });
 };

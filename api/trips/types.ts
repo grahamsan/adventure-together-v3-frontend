@@ -27,7 +27,8 @@ export interface CreateTripDto {
 }
 
 export interface ApplyToTripDto {
-  message: string;
+  /** Optionnel : le serveur génère un texte par défaut dans le 1er message de conversation. */
+  message?: string;
 
   requestedSeats: number;
 }

@@ -26,3 +26,15 @@ export interface UpdatePlaceDto {
   address?: string;
 }
 
+/** Réponse GET /places/:id */
+export interface PlaceDetail {
+  id: string;
+  title: string;
+  description: string;
+  type: CreatePlaceDto["type"];
+  imageUrl?: string | null;
+  address?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+}
+
